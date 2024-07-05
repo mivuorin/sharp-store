@@ -1,0 +1,16 @@
+﻿# EditorConfig is awesome: https://editorconfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*]
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.fs]
+fsharp_experimental_elmish = true
+
+[*.json]
+indent_size = 2
