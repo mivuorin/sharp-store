@@ -1,8 +1,11 @@
+module SharpStore.Web.Program
+
+open System
 open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.Hosting
 open Giraffe
 
-let routes = choose [ route "/" >=> text "Hello Giraffe World!" ]
+let routes = choose [ route "/" >=> htmlView Index.view ]
 
 [<EntryPoint>]
 let main args =
@@ -16,4 +19,4 @@ let main args =
     app.UseGiraffe(routes)
     app.Run()
 
-    0 // Exit code
+    0
