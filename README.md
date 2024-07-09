@@ -17,7 +17,13 @@ F# Web App experiment with DDD
 
 4. Run
 
-       dotnet run
+       dotnet run --project SharpStore.Web
+
+5. Or run with watch
+
+       dotnet watch run --project SharpStore.Web
+
+6. Or use configured launch settings and run from IDE
 
 ## Code formatting (Fantomas)
 
