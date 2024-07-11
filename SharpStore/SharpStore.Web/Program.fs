@@ -5,7 +5,17 @@ open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.Hosting
 open Giraffe
 
-let routes = choose [ route "/" >=> htmlView Index.view ]
+// todo Case insensitive routing (routeCi)
+let routes =
+    choose [
+        GET
+        >=> choose [
+            route "/" >=> htmlView Index.view
+            route "/order" >=> Order.get
+            route "/thanks" >=> Order.complete
+        ]
+        POST >=> choose [ route "/order" >=> Order.post ]
+    ]
 
 [<EntryPoint>]
 let main args =
