@@ -23,42 +23,36 @@ let init: Model =
       Errors = Map.empty }
 
 let view (model: Model) =
-    html [] [
-        head [] [ title [] [ str "SharpStore" ] ]
-        body [] [
-            h1 [] [ str "Order Form" ]
-            p [] [ str "Fill out following order form." ]
-            form [ _method "POST" ] [
-                // Cannot use same field for validation, because error message contains field ID
-                let productCodeField = "ProductCode"
-                label [ _for productCodeField ] [ str "Product code" ]
-                br []
+    [ h1 [] [ str "Order Form" ]
+      p [] [ str "Fill out following order form." ]
+      form [ _method "POST" ] [
+          // Cannot use same field for validation, because error message contains field ID
+          let productCodeField = "ProductCode"
+          label [ _for productCodeField ] [ str "Product code" ]
+          br []
 
-                input [
-                    _id productCodeField
-                    _type "text"
-                    _name productCodeField
-                    _value model.Form.ProductCode
-                ]
+          input [
+              _id productCodeField
+              _type "text"
+              _name productCodeField
+              _value model.Form.ProductCode
+          ]
 
-                br []
-                // todo Cleanup errors into partial view
-                match model.Errors.TryFind productCodeField with
-                | None -> emptyText
-                | Some errors ->
-                    let lines = errors |> List.map (fun e -> li [] [ str e ])
-                    ul [ _style "color:red" ] lines
+          br []
+          // todo Cleanup errors into partial view
+          match model.Errors.TryFind productCodeField with
+          | None -> emptyText
+          | Some errors ->
+              let lines = errors |> List.map (fun e -> li [] [ str e ])
+              ul [ _style "color:red" ] lines
 
-                input [ _id "submit"; _type "submit"; _name "submit" ]
-            ]
-        ]
-    ]
+          input [ _id "submit"; _type "submit"; _name "submit" ]
+      ] ]
+    |> Layout.main
 
 let orderSubmittedView =
-    html [] [
-        head [] [ title [] [ str "SharpStore" ] ]
-        body [] [ h1 [] [ str "Order Submitted" ]; p [] [ str "Thank you for your order." ] ]
-    ]
+    [ h1 [] [ str "Order Submitted" ]; p [] [ str "Thank you for your order." ] ]
+    |> Layout.main
 
 let productCodeValidator =
     ValidatorGroup(Check.String.notEmpty).And(Check.String.lessThanLen 3).Build()
