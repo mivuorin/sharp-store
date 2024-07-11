@@ -3,4 +3,7 @@
 open Giraffe.ViewEngine
 
 let main content =
-    html [] [ head [] [ title [] [ str "SharpStore" ] ]; body [] content ]
+    html [] [
+        head [] [ title [] [ str "SharpStore" ] ]
+        body [] content
+    ]

@@ -46,12 +46,17 @@ let view (model: Model) =
               let lines = errors |> List.map (fun e -> li [] [ str e ])
               ul [ _style "color:red" ] lines
 
-          input [ _id "submit"; _type "submit"; _name "submit" ]
+          input [
+              _id "submit"
+              _type "submit"
+              _name "submit"
+          ]
       ] ]
     |> Layout.main
 
 let orderSubmittedView =
-    [ h1 [] [ str "Order Submitted" ]; p [] [ str "Thank you for your order." ] ]
+    [ h1 [] [ str "Order Submitted" ]
+      p [] [ str "Thank you for your order." ] ]
     |> Layout.main
 
 let productCodeValidator =
