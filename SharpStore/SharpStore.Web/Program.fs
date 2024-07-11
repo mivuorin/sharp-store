@@ -4,18 +4,15 @@ open System
 open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.Hosting
 open Giraffe
+open Giraffe.EndpointRouting
 
-// todo Case insensitive routing (routeCi)
-let routes =
-    choose [
-        GET
-        >=> choose [
-            route "/" >=> htmlView Index.view
-            route "/order" >=> Order.get
-            route "/thanks" >=> Order.complete
-        ]
-        POST >=> choose [ route "/order" >=> Order.post ]
-    ]
+let endpoints =
+    [ GET [
+          route "/" (htmlView Index.view)
+          route "/order" Order.get
+          route "/thanks" Order.complete
+      ]
+      POST [ route "/order" Order.post ] ]
 
 [<EntryPoint>]
 let main args =
@@ -26,7 +23,8 @@ let main args =
 
     let app = builder.Build()
 
-    app.UseGiraffe(routes)
+    app.UseRouting().UseEndpoints(fun e -> e.MapGiraffeEndpoints(endpoints))
+
     app.Run()
 
     0
