@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SharpStore.Web", "SharpStore.Web\SharpStore.Web.fsproj", "{50FD1549-1730-4A9E-929F-34D3228D6D69}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SharpStore.Test", "SharpStore.Test\SharpStore.Test.fsproj", "{5FBC97E1-B04A-4A76-A586-2C31D2AB7AFF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{50FD1549-1730-4A9E-929F-34D3228D6D69}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{50FD1549-1730-4A9E-929F-34D3228D6D69}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{50FD1549-1730-4A9E-929F-34D3228D6D69}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FBC97E1-B04A-4A76-A586-2C31D2AB7AFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FBC97E1-B04A-4A76-A586-2C31D2AB7AFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FBC97E1-B04A-4A76-A586-2C31D2AB7AFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FBC97E1-B04A-4A76-A586-2C31D2AB7AFF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
