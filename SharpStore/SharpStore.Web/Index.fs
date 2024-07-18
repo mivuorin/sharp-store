@@ -1,8 +1,9 @@
 ﻿module SharpStore.Web.Index
 
+open Giraffe
 open Giraffe.ViewEngine
 
-let view =
+let view: HttpHandler =
     [ h1 [] [ str "Welcome to Giraffe" ]
       p [ _id "welcome" ] [
           str "This is a dev experiment for "
@@ -14,3 +15,4 @@ let view =
       rawText "<p>Rawdogging text is possible but should be <b>avoided!</b></p>"
       encodedText "<p>Always encode user input!</p>" ]
     |> Layout.main
+    |> htmlView

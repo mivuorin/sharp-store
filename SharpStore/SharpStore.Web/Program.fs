@@ -8,7 +8,7 @@ open Giraffe.EndpointRouting
 
 let endpoints =
     [ GET [
-          route "/" (htmlView Index.view)
+          route "/" Index.view
           route "/order" Order.get
           route "/thanks" Order.complete
       ]
@@ -24,6 +24,7 @@ let main args =
     let app = builder.Build()
 
     app.UseRouting().UseEndpoints(fun e -> e.MapGiraffeEndpoints(endpoints))
+    |> ignore
 
     app.Run()
 
