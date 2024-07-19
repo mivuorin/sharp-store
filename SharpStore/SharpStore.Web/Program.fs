@@ -1,18 +1,21 @@
 module SharpStore.Web.Program
 
-open System
 open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.Hosting
 open Giraffe
 open Giraffe.EndpointRouting
 
+open SharpStore.Web.Domain
+
+let submitOrder: SubmitOrder = submitOrder orderValidator orderId
+
 let endpoints =
     [ GET [
           route "/" Index.view
-          route "/order" Order.get
-          route "/thanks" Order.complete
+          route "/order" OrderController.get
+          route "/thanks" OrderController.complete
       ]
-      POST [ route "/order" Order.post ] ]
+      POST [ route "/order" (OrderController.post submitOrder) ] ]
 
 [<EntryPoint>]
 let main args =

@@ -1,18 +1,11 @@
-﻿module SharpStore.Web.Order
-// todo rename Order module to OrderController
+﻿module SharpStore.Web.OrderController
 
-open System
 open Giraffe
 open Giraffe.ViewEngine
 open Microsoft.FSharp.Collections
 open Microsoft.FSharp.Core
-open Validus
 
-// todo Move to domain
-type OrderType = { ProductCode: String }
-
-[<CLIMutable>]
-type OrderForm = { ProductCode: string }
+open SharpStore.Web.Domain
 
 type Model =
     { Form: OrderForm
@@ -54,36 +47,28 @@ let view (model: Model) =
       ] ]
     |> Layout.main
 
-let orderSubmittedView =
+let submittedView =
     [ h1 [] [ str "Order Submitted" ]
       p [] [ str "Thank you for your order." ] ]
     |> Layout.main
 
-let productCodeValidator =
-    ValidatorGroup(Check.String.notEmpty).And(Check.String.lessThanLen 3).Build()
-
-let validateForm (form: OrderForm) =
-    validate {
-        let! productCode = productCodeValidator "ProductCode" form.ProductCode
-        let order: OrderType = { ProductCode = productCode }
-        return order
-    }
-
-let submitOrder form =
-    match validateForm form with
-    | Ok _ ->
-        // todo do something with valid order
-        redirectTo false "/thanks"
-    | Error e ->
-        { Form = form
-          Errors = ValidationErrors.toMap e }
-        |> view
-        |> htmlView
-
 let get: HttpHandler = init |> view |> htmlView
 
-let post: HttpHandler =
-    // todo Culture specific form parsing
-    tryBindForm<OrderForm> RequestErrors.BAD_REQUEST None submitOrder
+let post: SubmitOrder -> HttpHandler =
+    fun submitOrder ->
+        let submitHandler form =
+            match submitOrder form with
+            | Ok _ ->
+                // todo show created order id
+                redirectTo false "/thanks/"
+            | Error e ->
+                { Form = form
+                  Errors = e }
+                |> view
+                |> htmlView
 
-let complete: HttpHandler = htmlView orderSubmittedView
+        // todo Culture specific form parsing
+        tryBindForm<OrderForm> RequestErrors.BAD_REQUEST None submitHandler
+
+
+let complete: HttpHandler = htmlView submittedView
