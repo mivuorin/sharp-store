@@ -4,42 +4,30 @@ F# Web App experiment with DDD
 
 ## Develop
 
-1. Install dotnet tools
-
-```shell
-dotnet tools restore
-```
-
-2. Restore nuget packages
-
-```shell
-dotnet nuget restore
-```
-
-3. Build
-
-```shell
-dotnet build
-```
-
-4. Start SQL Server docker container
-
-```shell
-docker-compose up 
-```
-
+1. Start SQL Server docker container
+    ```shell
+    docker-compose up 
+    ```
+2. Solution folder:
+    ```shell
+   cd SharpStore
+    ```
+3. Install dotnet tools
+    ```shell
+   dotnet tool restore
+    ```
+4. Build
+    ```shell
+    dotnet build
+    ```
 5. Run
-
-```shell
-dotnet run --project SharpStore.Web
-```
-
+   ```shell
+   dotnet run --project SharpStore.Web
+   ```
 6. Or run with watch
-
-```shell
-dotnet watch run --project SharpStore.Web
-```
-
+   ```shell
+   dotnet watch run --project SharpStore.Web
+   ```
 7. Or use configured launch settings and run from IDE
 
 ## Code formatting (Fantomas)
