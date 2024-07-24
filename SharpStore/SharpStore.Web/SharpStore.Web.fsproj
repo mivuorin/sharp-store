@@ -9,11 +9,15 @@
         <Compile Include="Layout.fs" />
         <Compile Include="Index.fs" />
         <Compile Include="OrderController.fs" />
-        <Compile Include="Program.fs"/>
+        <Compile Include="Migrations.fs" />
+        <Compile Include="Program.fs" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Giraffe" Version="6.4.0"/>
+        <PackageReference Include="FluentMigrator" Version="5.2.0" />
+        <PackageReference Include="FluentMigrator.Runner" Version="5.2.0" />
+        <PackageReference Include="FluentMigrator.Runner.SqlServer" Version="5.2.0" />
+        <PackageReference Include="Giraffe" Version="6.4.0" />
         <PackageReference Include="Validus" Version="4.1.4" />
     </ItemGroup>
 

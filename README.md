@@ -6,25 +6,41 @@ F# Web App experiment with DDD
 
 1. Install dotnet tools
 
-       dotnet tools restore
+```shell
+dotnet tools restore
+```
 
 2. Restore nuget packages
 
-       dotnet nuget restore
+```shell
+dotnet nuget restore
+```
 
 3. Build
 
-       dotnet build
+```shell
+dotnet build
+```
 
-4. Run
+4. Start SQL Server docker container
 
-       dotnet run --project SharpStore.Web
+```shell
+docker-compose up 
+```
 
-5. Or run with watch
+5. Run
 
-       dotnet watch run --project SharpStore.Web
+```shell
+dotnet run --project SharpStore.Web
+```
 
-6. Or use configured launch settings and run from IDE
+6. Or run with watch
+
+```shell
+dotnet watch run --project SharpStore.Web
+```
+
+7. Or use configured launch settings and run from IDE
 
 ## Code formatting (Fantomas)
 
@@ -32,7 +48,30 @@ Project uses Fantomas for code formatting and styles.
 
 To format all files:
 
-    dotnet fantomas .
+```shell
+dotnet fantomas .
+```
+
+## SQL Server 2022 & Migrations
+
+Project uses [Sql Server 2022](https://hub.docker.com/r/microsoft/mssql-server) database docker image.
+
+[FluentMigration](https://github.com/fluentmigrator/fluentmigrator) database migration tool cannot create database, so
+it needs to be created manually.
+After starting container, run following sql script with any sql tool.
+
+```tsql
+create database SharpStore
+```
+
+FluentMigration CLI is installed as local dotnet tool. Because of bug or user error, full connection string needs to be
+provided when running migration commands.
+
+Run all migrations:
+
+```shell
+dotnet fm migrate -p SqlServer2016 -c "Server=localhost;Database=SharpStore;User Id=sa;Password=u4IDQGp119AtWV2SvH38184ufzSG4es7;TrustServerCertificate=true;" -a .\SharpStore.Web\bin\Debug\net8.0\SharpStore.Web.dll
+```
 
 ## Forms & Validation
 
