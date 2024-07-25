@@ -6,6 +6,7 @@
 
     <ItemGroup>
         <Compile Include="Domain.fs" />
+        <Compile Include="Database.fs" />
         <Compile Include="Layout.fs" />
         <Compile Include="Index.fs" />
         <Compile Include="OrderController.fs" />
@@ -14,10 +15,12 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Dapper.FSharp" Version="4.8.0" />
         <PackageReference Include="FluentMigrator" Version="5.2.0" />
         <PackageReference Include="FluentMigrator.Runner" Version="5.2.0" />
         <PackageReference Include="FluentMigrator.Runner.SqlServer" Version="5.2.0" />
         <PackageReference Include="Giraffe" Version="6.4.0" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" />
         <PackageReference Include="Validus" Version="4.1.4" />
     </ItemGroup>
 

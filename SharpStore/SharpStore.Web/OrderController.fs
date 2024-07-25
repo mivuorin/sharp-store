@@ -1,5 +1,6 @@
 ﻿module SharpStore.Web.OrderController
 
+open System
 open Giraffe
 open Giraffe.ViewEngine
 open Microsoft.FSharp.Collections
@@ -47,28 +48,40 @@ let view (model: Model) =
       ] ]
     |> Layout.main
 
-let submittedView =
+let submittedView (orderId: Guid) =
     [ h1 [] [ str "Order Submitted" ]
-      p [] [ str "Thank you for your order." ] ]
+      p [] [ str "Thank you for your order." ]
+      p [] [
+          str "Your order id is: "
+          str (orderId.ToString())
+      ] ]
     |> Layout.main
 
 let get: HttpHandler = init |> view |> htmlView
 
-let post: SubmitOrder -> HttpHandler =
-    fun submitOrder ->
-        let submitHandler form =
-            match submitOrder form with
-            | Ok _ ->
-                // todo show created order id
-                redirectTo false "/thanks/"
+let postHandler: HttpHandler = fun next ctx -> next ctx
+
+let post: HttpHandler =
+    fun next ctx ->
+        task {
+            let submitOrder = ctx.GetService<SubmitOrder>()
+
+            // todo use TryBind instead of Bind for better error handling?
+            let! form = ctx.BindFormAsync<OrderForm>()
+            let! result = submitOrder form
+
+            match result with
+            | Ok created ->
+                let short = ShortGuid.fromGuid created.id
+                let url = $"/thanks/{short}"
+                return! redirectTo false url next ctx
+
             | Error e ->
-                { Form = form
-                  Errors = e }
-                |> view
-                |> htmlView
+                let model =
+                    { Form = form
+                      Errors = e }
 
-        // todo Culture specific form parsing
-        tryBindForm<OrderForm> RequestErrors.BAD_REQUEST None submitHandler
+                return! htmlView (view model) next ctx
+        }
 
-
-let complete: HttpHandler = htmlView submittedView
+let complete (orderId: Guid) : HttpHandler = orderId |> submittedView |> htmlView

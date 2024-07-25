@@ -1,6 +1,7 @@
 ﻿module SharpStore.Test.SubmitOrderTest
 
 open System
+open System.Threading.Tasks
 open Validus
 open Xunit
 open FsUnit
@@ -19,16 +20,28 @@ let Submit_should_return_validation_errors_when_form_is_invalid () =
 
     let form: OrderForm = { ProductCode = "" }
 
-    submitOrder validator Guid.NewGuid form |> should equal expected
+    let insertOrder: InsertOrder = fun _ _ -> Task.FromResult 1
+
+    task {
+        let! actual = submitOrder validator Guid.NewGuid insertOrder form
+        actual |> should equal expected
+    }
+
 
 [<Fact>]
 let Submit_should_create_order_id () =
     let validator: OrderValidator = fun _ -> Ok { ProductCode = "ProductCode" }
 
-    let orderId = Guid.NewGuid()
+    let expectedOrderId = Guid.NewGuid()
+    let orderId: OrderId = fun () -> expectedOrderId
 
-    let expected: OrderCreatedResult = { id = orderId } |> Ok
+    let expected: OrderCreatedResult = { id = expectedOrderId } |> Ok
 
     let form: OrderForm = { ProductCode = "" }
 
-    submitOrder validator (fun () -> orderId) form |> should equal expected
+    let insertOrder: InsertOrder = fun _ _ -> Task.FromResult 1
+
+    task {
+        let! actual = submitOrder validator orderId insertOrder form
+        actual |> should equal expected
+    }

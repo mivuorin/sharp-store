@@ -131,3 +131,22 @@ let Index_view_handler_example_test () =
         content |> should contain "Welcome to Giraffe"
     }
 ```
+
+## Dependency Injection vs. Composition in Giraffe and Asp.NET
+
+It's not possible to fully compose Asp.NET application from pure functions because some dependencies have state and life
+cycle.
+
+For example database connection needs to be closed and disposed properly at the end of request, which couples it to http
+requests. This could be fixed by adding more logic into database layer, with some connection factory which would manage
+connection state, but this would add extra responsibilities and increase database layer complexity.
+
+Proper solution is to use existing Asp.NET IOC for managing instance life cycle and dependency injection.
+
+Sadly Giraffe has no abstraction for registering dependencies or dependency injection and relies on service locator
+antipattern.
+
+```fsharp
+let submitOrder = ctx.GetService<SubmitOrder>()
+```
+

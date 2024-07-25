@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="DatabaseTest.fs" />
         <Compile Include="HttpHandlerTest.fs" />
         <Compile Include="OrderFormValidationTest.fs" />
         <Compile Include="SubmitOrderTest.fs" />
