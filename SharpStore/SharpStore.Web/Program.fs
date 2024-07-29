@@ -43,7 +43,10 @@ let main args =
 
     let app = builder.Build()
 
-    app.UseRouting().UseEndpoints(fun e -> e.MapGiraffeEndpoints(endpoints))
+    app
+        .UseStaticFiles()
+        .UseRouting()
+        .UseEndpoints(fun e -> e.MapGiraffeEndpoints(endpoints))
     |> ignore
 
     app.Run()
