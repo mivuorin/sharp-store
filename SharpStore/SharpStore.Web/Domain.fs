@@ -6,9 +6,10 @@ open Microsoft.FSharp.Core
 open Validus
 
 [<CLIMutable>]
-type OrderForm = { ProductCode: string }
+type OrderForm = { ProductCodes: string list }
 
-type ValidatedOrder = { ProductCode: string }
+// todo Own type for product code.
+type ValidatedOrder = { ProductCodes: string list }
 
 type OrderCreated = { id: Guid }
 
@@ -26,18 +27,27 @@ type SubmitOrder = OrderForm -> Task<OrderCreatedResult>
 // todo Move to validator module
 
 let productCodeValidator =
+    // todo Provide custom validation messages instead of using library ones.
     ValidatorGroup(Check.String.notEmpty).And(Check.String.lessThanLen 3).Build()
 
 let orderValidator: OrderValidator =
     fun form ->
+        let productCodesField = nameof form.ProductCodes
+
         validate {
-            let! productCode = productCodeValidator "ProductCode" form.ProductCode
-            let order: ValidatedOrder = { ProductCode = productCode }
-            return order
+            // todo This should be coupled to OrderForm type some way?
+            // todo When validating list of values, id should contain field index.
+            let! productCodes =
+                form.ProductCodes
+                |> List.mapi (fun i -> productCodeValidator (productCodesField + string i))
+                |> ValidationResult.sequence
+
+            return { ProductCodes = productCodes }
         }
         |> Result.mapError ValidationErrors.toMap
 
-type InsertOrder = Guid -> ValidatedOrder -> Task<int>
+type InsertOrder = Guid -> ValidatedOrder -> Task
+
 
 let submitOrder: OrderValidator -> OrderId -> InsertOrder -> SubmitOrder =
     fun validator orderId insertOrder ->
@@ -50,7 +60,7 @@ let submitOrder: OrderValidator -> OrderId -> InsertOrder -> SubmitOrder =
                 | Result.Ok order ->
                     let id = orderId ()
                     // todo check inserted?
-                    let! _ = insertOrder id order
+                    do! insertOrder id order
 
-                    return Ok { id = orderId () }
+                    return Ok { id = id }
             }

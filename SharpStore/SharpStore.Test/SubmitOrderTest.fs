@@ -18,9 +18,9 @@ let Submit_should_return_validation_errors_when_form_is_invalid () =
 
     let expected: OrderCreatedResult = errors |> Error
 
-    let form: OrderForm = { ProductCode = "" }
+    let form: OrderForm = { ProductCodes = [ "" ] }
 
-    let insertOrder: InsertOrder = fun _ _ -> Task.FromResult 1
+    let insertOrder: InsertOrder = fun _ _ -> Task.CompletedTask
 
     task {
         let! actual = submitOrder validator Guid.NewGuid insertOrder form
@@ -30,16 +30,16 @@ let Submit_should_return_validation_errors_when_form_is_invalid () =
 
 [<Fact>]
 let Submit_should_create_order_id () =
-    let validator: OrderValidator = fun _ -> Ok { ProductCode = "ProductCode" }
+    let validator: OrderValidator = fun _ -> Ok { ProductCodes = [ "ProductCode" ] }
 
     let expectedOrderId = Guid.NewGuid()
     let orderId: OrderId = fun () -> expectedOrderId
 
     let expected: OrderCreatedResult = { id = expectedOrderId } |> Ok
 
-    let form: OrderForm = { ProductCode = "" }
+    let form: OrderForm = { ProductCodes = [ "" ] }
 
-    let insertOrder: InsertOrder = fun _ _ -> Task.FromResult 1
+    let insertOrder: InsertOrder = fun _ _ -> Task.CompletedTask
 
     task {
         let! actual = submitOrder validator orderId insertOrder form

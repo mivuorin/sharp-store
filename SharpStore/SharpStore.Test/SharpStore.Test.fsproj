@@ -12,6 +12,7 @@
         <Compile Include="DatabaseTest.fs" />
         <Compile Include="HttpHandlerTest.fs" />
         <Compile Include="OrderFormValidationTest.fs" />
+        <Compile Include="ProductCodeValidationTest.fs" />
         <Compile Include="SubmitOrderTest.fs" />
         <Compile Include="Program.fs"/>
     </ItemGroup>
