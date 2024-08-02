@@ -21,6 +21,8 @@
         <PackageReference Include="FluentMigrator.Runner" Version="5.2.0" />
         <PackageReference Include="FluentMigrator.Runner.SqlServer" Version="5.2.0" />
         <PackageReference Include="Giraffe" Version="6.4.0" />
+        <PackageReference Include="Giraffe.Htmx" Version="2.0.1" />
+        <PackageReference Include="Giraffe.ViewEngine.Htmx" Version="2.0.1" />
         <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" />
         <PackageReference Include="Validus" Version="4.1.4" />
     </ItemGroup>

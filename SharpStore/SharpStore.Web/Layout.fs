@@ -6,6 +6,19 @@ open Giraffe.ViewEngine
 let _data_bs_toggle = attr "data-bs-toggle"
 let _data_bs_target = attr "data-bs-target"
 
+let scripts =
+    [ script [
+          _src "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+          _integrity "sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+          _crossorigin "anonymous"
+      ] []
+      script [
+          _src "https://unpkg.com/htmx.org@2.0.1"
+          _integrity "sha384-QWGpdj554B4ETpJJC9z+ZHJcA/i59TyjxEPXiiUgN2WmTyV5OEZWCD6gQhgkdpB/"
+          _crossorigin "anonymous"
+      ] [] ]
+
+
 let main (content: XmlNode list) : XmlNode =
     html [] [
         head [] [
@@ -34,7 +47,7 @@ let main (content: XmlNode list) : XmlNode =
                                // todo create logo in vector format
                                img [
                                    _style "height: 2rem"
-                                   _src "shovel_64.png"
+                                   _src "/shovel_64.png"
                                ]
                                str "SharpStore"
                            ]
@@ -69,9 +82,5 @@ let main (content: XmlNode list) : XmlNode =
                div [ _class "container" ] content
 
                ]
-             @ [ script [
-                     _src "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-                     _integrity "sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-                     _crossorigin "anonymous"
-                 ] [] ])
+             @ scripts)
     ]

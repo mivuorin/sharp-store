@@ -1,5 +1,6 @@
 module SharpStore.Test.OrderFormValidationTest
 
+open SharpStore.Web
 open Xunit
 open FsUnit
 
@@ -12,7 +13,7 @@ let Product_code_validation_errors_are_indexed () =
             [ ""
               "1234" ] }
 
-    let result = orderValidator form
+    let result = Validation.orderValidator form
     result |> Result.isError |> should equal true
 
     let errors =
@@ -34,7 +35,7 @@ let Correct_order () =
             [ "01"
               "02" ] }
 
-    let result = orderValidator form
+    let result = Validation.orderValidator form
 
     let expected: ValidatedOrder =
         { ProductCodes =

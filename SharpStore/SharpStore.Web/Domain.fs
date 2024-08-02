@@ -3,16 +3,23 @@
 open System
 open System.Threading.Tasks
 open Microsoft.FSharp.Core
-open Validus
 
 [<CLIMutable>]
-type OrderForm = { ProductCodes: string list }
+type ProductForm = { ProductCode: string }
+
+[<CLIMutable>]
+type OrderForm = {
+    ProductCodes: string list
+}
+
+type ValidatedProduct = { ProductCode: string }
 
 // todo Own type for product code.
 type ValidatedOrder = { ProductCodes: string list }
 
 type OrderCreated = { id: Guid }
 
+type ProductValidator = ProductForm -> Result<ValidatedProduct, Map<string, string list>>
 type OrderValidator = OrderForm -> Result<ValidatedOrder, Map<string, string list>>
 
 type OrderCreatedResult = Result<OrderCreated, Map<string, string list>>
@@ -22,29 +29,6 @@ type OrderId = unit -> Guid
 let orderId: OrderId = Guid.NewGuid
 
 type SubmitOrder = OrderForm -> Task<OrderCreatedResult>
-
-
-// todo Move to validator module
-
-let productCodeValidator =
-    // todo Provide custom validation messages instead of using library ones.
-    ValidatorGroup(Check.String.notEmpty).And(Check.String.lessThanLen 3).Build()
-
-let orderValidator: OrderValidator =
-    fun form ->
-        let productCodesField = nameof form.ProductCodes
-
-        validate {
-            // todo This should be coupled to OrderForm type some way?
-            // todo When validating list of values, id should contain field index.
-            let! productCodes =
-                form.ProductCodes
-                |> List.mapi (fun i -> productCodeValidator (productCodesField + string i))
-                |> ValidationResult.sequence
-
-            return { ProductCodes = productCodes }
-        }
-        |> Result.mapError ValidationErrors.toMap
 
 type InsertOrder = Guid -> ValidatedOrder -> Task
 

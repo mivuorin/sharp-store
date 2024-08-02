@@ -1,10 +1,11 @@
 ﻿module SharpStore.Test.ProductCodeValidationTest
 
-open SharpStore.Web
 open Xunit
 open FsUnit
 
-let validator = Domain.productCodeValidator "test"
+open SharpStore.Web
+
+let validator = Validation.productCodeValidator "test"
 
 [<Fact>]
 let Product_code_is_required () =

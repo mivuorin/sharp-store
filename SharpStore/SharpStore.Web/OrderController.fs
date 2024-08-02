@@ -1,35 +1,35 @@
 ﻿module SharpStore.Web.OrderController
 
 open System
+open System.Threading.Tasks
+open Microsoft.AspNetCore.Http
+
 open Giraffe
+open Giraffe.Htmx.Handlers
 open Giraffe.ViewEngine
+open Giraffe.ViewEngine.Htmx
 open Giraffe.EndpointRouting
 
-open Microsoft.FSharp.Collections
-open Microsoft.FSharp.Core
-
 open SharpStore.Web.Domain
+open SharpStore.Web.Validation
 
-let (|IndexedAction|_|) (prefix: String) (action: string option) =
-    if action.IsNone then
-        None
-    else if action.Value.StartsWith(prefix) then
-        action.Value.Substring(prefix.Length) |> int |> Some
-    else
-        None
-
-let indexedAction prefix (index: int) = prefix + string index
+// Fixed form binding problem where ProductCodes is left uninitialized when form has is no values.
+type OrderFormC(productCodes: string list) =
+    member val ProductCodes = productCodes with get, set
+    new() = OrderFormC([])
 
 type Model =
-    { Form: OrderForm
+    { OrderForm: OrderForm
+      ProductForm: ProductForm
       Errors: Map<string, string list> }
 
 let init: Model =
-    { Form = { ProductCodes = [ "" ] }
+    { OrderForm = { ProductCodes = [] }
+      ProductForm = { ProductCode = "" }
       Errors = Map.empty }
 
 // todo refactor into own Validation module and replace Map<string, string list> with proper type.
-let errorsForField id index (errors: Map<string, string list>) : string list =
+let errorsForFieldIndex id index (errors: Map<string, string list>) : string list =
     // todo Refactor and use nameof
     let fieldId = id + string index
     Map.tryFind fieldId errors |> Option.defaultValue []
@@ -39,74 +39,88 @@ let errorMessage id message =
 
 let classString classes = String.concat " " classes
 
-let productCodeField (errors: Map<string, string list>) index value =
-    let errorFeedback =
-        match (errorsForField "ProductCodes" index errors) with
-        | [] -> List.empty
-        | errors -> errors |> List.map (fun e -> div [ _class "invalid-feedback" ] [ str e ])
+let orderForm (model: Model) =
+    let addProduct =
+        let errors = model.Errors |> Map.tryFind "ProductCode" |> Option.defaultValue []
 
-    let fieldErrors = errorsForField "ProductCodes" index errors
-    let hasErrors = fieldErrors |> List.isEmpty |> not
+        let errorFeedback errors : XmlNode list =
+            match errors with
+            | [] -> List.empty
+            | errors -> errors |> List.map (fun e -> div [ _class "invalid-feedback" ] [ str e ])
 
-    let classes =
-        seq {
-            yield "form-control"
+        let classes =
+            seq {
+                yield "form-control"
 
-            if hasErrors then
-                yield "is-invalid"
-        }
+                if errors |> List.isEmpty |> not then
+                    yield "is-invalid"
+            }
 
-    div [ _class "row mb-3" ] [
-        div
-            [ _class "col-8" ]
-            ([ input [
-                   _class (classString classes)
-                   _type "text"
-                   _name "ProductCodes"
-                   _placeholder "Product code"
-                   _value value
-               ] ]
-             @ errorFeedback)
-        div [ _class "col" ] [
-            button [
-                _class "btn btn-link"
-                _type "submit"
-                _name "action"
-                _value (indexedAction "delete" index)
-            ] [ str "Remove" ]
+        div [ _class "row mb-3" ] [
+            div
+                [ _class "col-8" ]
+                (input [
+                    _id "add-product-code"
+                    _class (classString classes)
+                    _type "text"
+                    _placeholder "Product code"
+                    _name "ProductCode"
+                    _value model.ProductForm.ProductCode
+                 ]
+                 :: (errorFeedback errors))
+            div [ _class "col" ] [
+                button [
+                    _class "btn btn-secondary"
+                    _type "submit"
+                    _hxPost "/order/product"
+                    _hxTrigger "click"
+                    _hxTarget "#order-form"
+                    _hxSwap "outerHTML"
+                ] [ str "Add Product" ]
+            ]
         ]
-    ]
+
+    let productCode index value =
+        div [ _class "row mb-3" ] [
+            div [ _class "col-8" ] [
+                input [
+                    _class "form-control-plaintext"
+                    _type "text"
+                    _name "ProductCodes"
+                    _readonly
+                    _value value
+                ]
+            ]
+            div [ _class "col" ] [
+                input [
+                    _class "btn btn-link"
+                    _type "button"
+                    _hxPost $"/order/product/delete/{index}"
+                    _hxTarget "#order-form"
+                    _hxSwap "outerHTML"
+                    _value "Remove"
+                ]
+            ]
+        ]
+
+    let productCodes: XmlNode list =
+        model.OrderForm.ProductCodes |> List.mapi productCode
+
+    form
+        [ _id "order-form" ]
+        (productCodes
+         @ [ addProduct ]
+         @ [ div [ _class "col" ] [
+                 button [
+                     _class "btn btn-primary"
+                     _hxPost "/order"
+                 ] [ str "Submit" ]
+             ] ])
 
 let view (model: Model) =
-    let productCodes: XmlNode list =
-        model.Form.ProductCodes |> List.mapi (productCodeField model.Errors)
-
     [ h1 [] [ str "Order Form" ]
       p [] [ str "Fill out following order form." ]
-      form
-          [ _method "POST" ]
-          (productCodes
-           @ [ div [ _class "col mb-3" ] [
-                   button [
-                       _class "btn btn-secondary"
-                       _type "submit"
-                       _name "action"
-                       _value "add"
-                   ] [ str "Add Product" ]
-               ] ]
-
-           @ [ div [ _class "row" ] [
-                   div [ _class "col" ] [
-                       button [
-                           _class "btn btn-primary"
-                           _type "submit"
-                           _name "action"
-                           _value "submit"
-                       ] [ str "Submit" ]
-                   ]
-
-               ] ]) ]
-
+      orderForm model ]
     |> Layout.main
 
 let submittedView (orderId: Guid) =
@@ -122,83 +136,86 @@ let get: HttpHandler = init |> view |> htmlView
 
 let post: HttpHandler =
     fun next ctx ->
-        // todo Use form binding for action?
-        let action = ctx.GetFormValue "action"
+        task {
+            let submitOrder = ctx.GetService<SubmitOrder>()
+            // todo form should have at leas one order line to be able to submit
 
-        match action with
-        | IndexedAction "delete" index ->
-            task {
-                let! form = ctx.BindFormAsync<OrderForm>()
+            let! form = ctx.BindFormAsync<OrderForm>()
+            let! result = submitOrder form
 
-                let productCodes =
-                    if form.ProductCodes.Length < 2 then
-                        [ "" ]
-                    else
-                        List.removeAt index form.ProductCodes
+            // Send client side redirect or just response with result?
+            match result with
+            | Ok created ->
+                let short = ShortGuid.fromGuid created.id
+                let url = $"/thanks/{short}"
 
-                let form = { form with ProductCodes = productCodes }
-                let validated = orderValidator form
+                return! withHxRedirect url next ctx
 
-                let model =
-                    match validated with
-                    | Ok _ ->
-                        { Form = form
-                          Errors = Map.empty }
-                    | Error errors ->
-                        { Form = form
-                          Errors = errors }
-
-                return! htmlView (view model) next ctx
-            }
-        | Some "add" ->
-            task {
-                let! form = ctx.BindFormAsync<OrderForm>()
-
-                let validated = orderValidator form
-
-                // Allow adding new rows only when rows are valid
-                let model =
-                    match validated with
-                    | Ok _ ->
-                        { Form = { form with ProductCodes = form.ProductCodes @ [ "" ] }
-                          Errors = Map.empty }
-
-                    | Error errors ->
-                        { Form = form
-                          Errors = errors }
-
-                return! htmlView (view model) next ctx
-            }
-
-        | Some "submit" ->
-            task {
-                let submitOrder = ctx.GetService<SubmitOrder>()
-
-                // todo use TryBind instead of Bind for better error handling?
-                let! form = ctx.BindFormAsync<OrderForm>()
-                let! result = submitOrder form
-
-                match result with
-                | Ok created ->
-                    let short = ShortGuid.fromGuid created.id
-                    let url = $"/thanks/{short}"
-                    return! redirectTo false url next ctx
-
-                | Error e ->
-                    let model =
-                        { Form = form
-                          Errors = e }
-
-                    return! htmlView (view model) next ctx
-            }
-
-        | _ -> RequestErrors.BAD_REQUEST "Invalid form action" next ctx
+            | Error _ ->
+                return!
+                    HttpStatusCodeHandlers.ServerErrors.internalError
+                        (text "Something went wrong when processing order!")
+                        next
+                        ctx
+        }
 
 let complete (orderId: Guid) : HttpHandler = orderId |> submittedView |> htmlView
+
+let bindForm (ctx: HttpContext) : Task<OrderForm> =
+    task {
+        let! form = ctx.BindFormAsync<OrderFormC>()
+        // BindFormAsync does not initialize list if it's missing from request.
+        // todo Fix form binding by using class type instead of mutable record.
+        return { OrderForm.ProductCodes = form.ProductCodes }
+    }
+
+let addProduct: HttpHandler =
+    fun next ctx ->
+        task {
+            let! form = bindForm ctx
+            let! productForm = ctx.BindFormAsync<ProductForm>()
+
+            let validated = productValidator productForm
+
+            let model =
+                match validated with
+                | Ok product ->
+                    { OrderForm = { form with ProductCodes = form.ProductCodes @ [ product.ProductCode ] }
+                      ProductForm = { ProductCode = "" }
+                      Errors = Map.empty }
+
+                | Error errors ->
+                    { OrderForm = form
+                      ProductForm = productForm
+                      Errors = errors }
+
+            let content = orderForm model
+            return! htmlView content next ctx
+        }
+
+let deleteProduct index : HttpHandler =
+    fun next ctx ->
+        task {
+            let! form = bindForm ctx
+            let! productForm = ctx.BindFormAsync<ProductForm>()
+
+            let model =
+                { OrderForm = { form with ProductCodes = form.ProductCodes |> List.removeAt index }
+                  ProductForm = productForm
+                  Errors = Map.empty }
+
+            let content = orderForm model
+            return! htmlView content next ctx
+        }
 
 let orderEndpoints =
     [ GET [
           route "/order" get
           routef "/thanks/%O" complete
       ]
-      POST [ route "/order" post ] ]
+      POST [
+          route "/order" post
+          route "/order/product" addProduct
+          // todo Change to use http delete request if order state is stored in session and not in http form.
+          routef "/order/product/delete/%i" deleteProduct
+      ] ]

@@ -9,6 +9,7 @@ open Microsoft.Extensions.Configuration
 
 open Giraffe
 open Giraffe.EndpointRouting
+
 open SharpStore.Web.Domain
 
 let endpoints = [ GET [ route "/" Index.view ] ] @ OrderController.orderEndpoints
@@ -29,7 +30,7 @@ let main args =
         )
         .AddTransient<SubmitOrder>(
             Func<IServiceProvider, SubmitOrder>(fun provider ->
-                provider.GetService<InsertOrder>() |> submitOrder orderValidator orderId)
+                provider.GetService<InsertOrder>() |> submitOrder Validation.orderValidator orderId)
         )
         .AddGiraffe()
     |> ignore
