@@ -59,8 +59,6 @@ let submitOrder: OrderValidator -> OrderId -> InsertOrder -> SubmitOrder =
                 | Result.Error error -> return Error error
                 | Result.Ok order ->
                     let id = orderId ()
-                    // todo check inserted?
                     do! insertOrder id order
-
                     return Ok { id = id }
             }

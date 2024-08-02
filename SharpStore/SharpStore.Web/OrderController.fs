@@ -3,6 +3,8 @@
 open System
 open Giraffe
 open Giraffe.ViewEngine
+open Giraffe.EndpointRouting
+
 open Microsoft.FSharp.Collections
 open Microsoft.FSharp.Core
 
@@ -193,3 +195,10 @@ let post: HttpHandler =
         | _ -> RequestErrors.BAD_REQUEST "Invalid form action" next ctx
 
 let complete (orderId: Guid) : HttpHandler = orderId |> submittedView |> htmlView
+
+let orderEndpoints =
+    [ GET [
+          route "/order" get
+          routef "/thanks/%O" complete
+      ]
+      POST [ route "/order" post ] ]

@@ -11,14 +11,7 @@ open Giraffe
 open Giraffe.EndpointRouting
 open SharpStore.Web.Domain
 
-let endpoints =
-    [ GET [
-          route "/" Index.view
-          route "/order" OrderController.get
-          routef "/thanks/%O" OrderController.complete
-      ]
-      POST [ route "/order" OrderController.post ] ]
-
+let endpoints = [ GET [ route "/" Index.view ] ] @ OrderController.orderEndpoints
 
 [<EntryPoint>]
 let main args =
