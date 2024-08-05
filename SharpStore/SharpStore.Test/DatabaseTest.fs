@@ -17,11 +17,18 @@ let Insert_order () =
 
     let expectedId = orderId ()
 
-    let expectedOrderLines =
-        [ "01"
-          "02" ]
+    let expectedFirst =
+        { ProductCode = "01"
+          Quantity = 1m }
 
-    let validatedOrder: ValidatedOrder = { ProductCodes = expectedOrderLines }
+    let expectedSecond =
+        { ProductCode = "02"
+          Quantity = 2.5m }
+
+    let validatedOrder: ValidatedOrder =
+        { ProductCodes =
+            [ expectedFirst
+              expectedSecond ] }
 
     task {
         use connection = connection connectionString
@@ -37,13 +44,24 @@ let Insert_order () =
 
         Seq.length actualOrder |> should equal 1
 
-        let! actualOrderLines =
+        let! actual =
             select {
                 for line in orderLineTable do
                     where (line.OrderId = expectedId)
             }
             |> connection.SelectAsync<OrderLine>
 
-        actualOrderLines |> Seq.length |> should equal 2
-        actualOrderLines |> Seq.map _.ProductCode |> should equal expectedOrderLines
+        actual |> Seq.length |> should equal 2
+
+        let lines = actual |> Seq.toList
+
+        let first = lines |> List.item 0
+        first.OrderId |> should equal expectedId
+        first.ProductCode |> should equal expectedFirst.ProductCode
+        first.Quantity |> should equal expectedFirst.Quantity
+
+        let second = lines |> List.item 1
+        second.OrderId |> should equal expectedId
+        second.ProductCode |> should equal expectedSecond.ProductCode
+        second.Quantity |> should equal expectedSecond.Quantity
     }

@@ -20,7 +20,7 @@ type CreateOrderTable() =
     override this.Down() = this.Delete.Table("Order") |> ignore
 
 [<Migration(2L, description = "Separate Order table to Order and OrderLines")>]
-type CreateOrderLinesTable() =
+type CreateOrderLineTable() =
     inherit Migration()
 
     override this.Up() =
@@ -40,4 +40,16 @@ type CreateOrderLinesTable() =
 
         this.Delete.Column("ProductCode").FromTable("Order") |> ignore
 
-    override this.Down() = this.Delete.Table("OrderLine") |> ignore
+    override this.Down() =
+        this.Delete.Table("OrderLine") |> ignore
+
+[<Migration(3L, description = "Add Quantity column to OrderLine")>]
+type AddQuantityColumnToOrderLineTable() =
+    inherit Migration()
+
+    override this.Up() =
+        this.Alter.Table("OrderLine").AddColumn("Quantity").AsDecimal().NotNullable()
+        |> ignore
+
+    override this.Down() =
+        this.Delete.Column("Quantity").FromTable("OrderLine") |> ignore

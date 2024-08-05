@@ -17,15 +17,17 @@ type Order = { Id: Guid }
 type OrderLine =
     { Id: Guid
       OrderId: Guid
-      ProductCode: string }
+      ProductCode: string
+      Quantity: decimal }
 
 let orderTable = table<Order>
 let orderLineTable = table<OrderLine>
 
-let toOrderLine orderId productCode =
+let toOrderLine orderId (orderLine: ValidatedOrderLine) =
     { Id = Guid.NewGuid()
       OrderId = orderId
-      ProductCode = productCode }
+      ProductCode = orderLine.ProductCode
+      Quantity = orderLine.Quantity }
 
 let insertOrder: IDbConnection -> InsertOrder =
     fun connection ->

@@ -11,62 +11,67 @@ open Giraffe.EndpointRouting
 open Microsoft.FSharp.Collections
 open SharpStore.Web.Domain
 open SharpStore.Web.Validation
+open Validus
 
 type Model =
     { OrderForm: OrderForm
-      ProductForm: ProductForm
+      OrderLineForm: OrderLineForm
       Errors: Map<string, string list> }
 
+let initOrderLineForm: OrderLineForm =
+    { ProductCode = ""
+      Quantity = "" }
+
 let init: Model =
-    { OrderForm = { ProductCodes = Array.empty }
-      ProductForm = { ProductCode = "" }
+    { OrderForm = { OrderLines = Array.empty }
+      OrderLineForm = initOrderLineForm
       Errors = Map.empty }
 
-// todo refactor into own Validation module and replace Map<string, string list> with proper type.
-let errorsForFieldIndex id index (errors: Map<string, string list>) : string list =
-    // todo Refactor and use nameof
-    let fieldId = id + string index
-    Map.tryFind fieldId errors |> Option.defaultValue []
+let errorFeedback errors : XmlNode list =
+    match errors with
+    | [] -> List.empty
+    | errors -> errors |> List.map (fun e -> div [ _class "invalid-feedback" ] [ str e ])
 
-let errorMessage id message =
-    div [ _class "invalid-feedback" ] [ message ]
+let classes errors =
+    seq {
+        yield "form-control"
 
-let classString classes = String.concat " " classes
+        if errors |> List.isEmpty |> not then
+            yield "is-invalid"
+    }
+    |> String.concat " "
 
-let orderForm (model: Model) =
+let textField id name placeHolder value errors =
+    let productCodeErrors = errors |> Map.tryFind name |> Option.defaultValue []
+
+    (input [
+        _id id
+        _class (classes productCodeErrors)
+        _type "text"
+        _placeholder placeHolder
+        _name name
+        _value value
+     ]
+     :: (errorFeedback productCodeErrors))
+
+let fieldName collectionName index name = $"{collectionName}[{index}].{name}"
+
+let orderFormView (model: Model) =
     let addProduct =
-        let errors = model.Errors |> Map.tryFind "ProductCode" |> Option.defaultValue []
-
-        let errorFeedback errors : XmlNode list =
-            match errors with
-            | [] -> List.empty
-            | errors -> errors |> List.map (fun e -> div [ _class "invalid-feedback" ] [ str e ])
-
-        let classes =
-            seq {
-                yield "form-control"
-
-                if errors |> List.isEmpty |> not then
-                    yield "is-invalid"
-            }
-
         div [ _class "row mb-3" ] [
             div
-                [ _class "col-8" ]
-                (input [
-                    _id "add-product-code"
-                    _class (classString classes)
-                    _type "text"
-                    _placeholder "Product code"
-                    _name "ProductCode"
-                    _value model.ProductForm.ProductCode
-                 ]
-                 :: (errorFeedback errors))
+                [ _class "col-5" ]
+                (textField "add-product-code" "ProductCode" "Product Code" model.OrderLineForm.ProductCode model.Errors)
+
+            div
+                [ _class "col-3" ]
+                (textField "add-product-quantity" "Quantity" "Quantity" model.OrderLineForm.Quantity model.Errors)
+
             div [ _class "col" ] [
                 button [
                     _class "btn btn-secondary"
                     _type "submit"
-                    _hxPost "/order/product"
+                    _hxPost "/order/line"
                     _hxTrigger "click"
                     _hxTarget "#order-form"
                     _hxSwap "outerHTML"
@@ -74,22 +79,31 @@ let orderForm (model: Model) =
             ]
         ]
 
-    let productCode index value =
+    let orderLineForm fieldName index (product: OrderLineForm) =
         div [ _class "row mb-3" ] [
-            div [ _class "col-8" ] [
+            div [ _class "col-4" ] [
                 input [
                     _class "form-control-plaintext"
                     _type "text"
-                    _name "ProductCodes"
+                    _name (fieldName index (nameof product.ProductCode))
                     _readonly
-                    _value value
+                    _value product.ProductCode
+                ]
+            ]
+            div [ _class "col-3" ] [
+                input [
+                    _class "form-control-plaintext"
+                    _type "text"
+                    _name (fieldName index (nameof product.Quantity))
+                    _readonly
+                    _value (string product.Quantity) // todo culture & formatting?
                 ]
             ]
             div [ _class "col" ] [
                 input [
                     _class "btn btn-link"
                     _type "button"
-                    _hxPost $"/order/product/delete/{index}"
+                    _hxPost $"/order/line/delete/{index}"
                     _hxTarget "#order-form"
                     _hxSwap "outerHTML"
                     _value "Remove"
@@ -98,7 +112,9 @@ let orderForm (model: Model) =
         ]
 
     let productCodes =
-        model.OrderForm.ProductCodes |> Array.mapi productCode |> Array.toList
+        model.OrderForm.OrderLines
+        |> Array.mapi (orderLineForm (fieldName (nameof model.OrderForm.OrderLines)))
+        |> Array.toList
 
     form
         [ _id "order-form" ]
@@ -114,7 +130,7 @@ let orderForm (model: Model) =
 let view (model: Model) =
     [ h1 [] [ str "Order Form" ]
       p [] [ str "Fill out following order form." ]
-      orderForm model ]
+      orderFormView model ]
     |> Layout.main
 
 let submittedView (orderId: Guid) =
@@ -132,7 +148,6 @@ let post: HttpHandler =
     fun next ctx ->
         task {
             let submitOrder = ctx.GetService<SubmitOrder>()
-            // todo form should have at leas one order line to be able to submit
 
             let! form = ctx.BindFormAsync<OrderForm>()
             let! result = submitOrder form
@@ -145,6 +160,7 @@ let post: HttpHandler =
 
                 return! withHxRedirect url next ctx
 
+            // todo Disable submit if there is problem in order
             | Error _ ->
                 return!
                     HttpStatusCodeHandlers.ServerErrors.internalError
@@ -153,46 +169,46 @@ let post: HttpHandler =
                         ctx
         }
 
-let complete (orderId: Guid) : HttpHandler = orderId |> submittedView |> htmlView
-
-let addProduct: HttpHandler =
+let addOrderLine: HttpHandler =
     fun next ctx ->
         task {
-            let! form = ctx.BindFormAsync<OrderForm>()
-            let! productForm = ctx.BindFormAsync<ProductForm>()
+            let! orderForm = ctx.BindFormAsync<OrderForm>()
+            let! orderLineForm = ctx.BindFormAsync<OrderLineForm>()
 
-            let validated = productValidator productForm
+            let validated = orderLineValidatorR orderLineForm
 
             let model =
                 match validated with
-                | Ok product ->
-                    { OrderForm = { form with ProductCodes = Array.append form.ProductCodes [| product.ProductCode |] }
-                      ProductForm = { ProductCode = "" }
+                | Ok _ ->
+                    { OrderForm = { orderForm with OrderLines = Array.append orderForm.OrderLines [| orderLineForm |] }
+                      OrderLineForm = initOrderLineForm
                       Errors = Map.empty }
 
                 | Error errors ->
-                    { OrderForm = form
-                      ProductForm = productForm
-                      Errors = errors }
+                    { OrderForm = orderForm
+                      OrderLineForm = orderLineForm
+                      Errors = errors |> ValidationErrors.toMap } // todo better type for ValidationErrors?
 
-            let content = orderForm model
+            let content = orderFormView model
             return! htmlView content next ctx
         }
 
-let deleteProduct index : HttpHandler =
+let deleteOrderLine index : HttpHandler =
     fun next ctx ->
         task {
-            let! form = ctx.BindFormAsync<OrderForm>()
-            let! productForm = ctx.BindFormAsync<ProductForm>()
+            let! orderForm = ctx.BindFormAsync<OrderForm>()
+            let! orderLineForm = ctx.BindFormAsync<OrderLineForm>()
 
             let model =
-                { OrderForm = { form with ProductCodes = form.ProductCodes |> Array.removeAt index }
-                  ProductForm = productForm
+                { OrderForm = { orderForm with OrderLines = orderForm.OrderLines |> Array.removeAt index }
+                  OrderLineForm = orderLineForm
                   Errors = Map.empty }
 
-            let content = orderForm model
+            let content = orderFormView model
             return! htmlView content next ctx
         }
+
+let complete (orderId: Guid) : HttpHandler = orderId |> submittedView |> htmlView
 
 let orderEndpoints =
     [ GET [
@@ -201,7 +217,7 @@ let orderEndpoints =
       ]
       POST [
           route "/order" post
-          route "/order/product" addProduct
+          route "/order/line" addOrderLine
           // todo Change to use http delete request if order state is stored in session and not in http form.
-          routef "/order/product/delete/%i" deleteProduct
+          routef "/order/line/delete/%i" deleteOrderLine
       ] ]
