@@ -1,5 +1,6 @@
 ﻿module SharpStore.Test.DatabaseTest
 
+open SharpStore.Web
 open Xunit
 open FsUnit
 
@@ -15,20 +16,21 @@ let Insert_order () =
     let connectionString =
         "Server=localhost;Database=SharpStore;User Id=sa;Password=u4IDQGp119AtWV2SvH38184ufzSG4es7;TrustServerCertificate=true;"
 
-    let expectedId = orderId ()
+    let expectedId = Domain.orderId ()
 
-    let expectedFirst =
-        { ProductCode = "01"
-          Quantity = 1m }
+    let form: OrderForm =
+        { OrderLines =
+            [| { ProductCode = "W0001"
+                 Quantity = "1" }
+               { ProductCode = "G002"
+                 Quantity = "2,5" } |] }
 
-    let expectedSecond =
-        { ProductCode = "02"
-          Quantity = 2.5m }
+    let r = Validation.orderValidator form
 
     let validatedOrder: ValidatedOrder =
-        { ProductCodes =
-            [ expectedFirst
-              expectedSecond ] }
+        match r with
+        | Ok valid -> valid
+        | Error e -> Printf.failwithf $"Invalid order: %A{e}"
 
     task {
         use connection = connection connectionString
@@ -48,6 +50,7 @@ let Insert_order () =
             select {
                 for line in orderLineTable do
                     where (line.OrderId = expectedId)
+                    orderBy line.OrderId
             }
             |> connection.SelectAsync<OrderLine>
 
@@ -57,11 +60,11 @@ let Insert_order () =
 
         let first = lines |> List.item 0
         first.OrderId |> should equal expectedId
-        first.ProductCode |> should equal expectedFirst.ProductCode
-        first.Quantity |> should equal expectedFirst.Quantity
+        first.ProductCode |> should equal "W0001"
+        first.Quantity |> should equal 1
 
         let second = lines |> List.item 1
         second.OrderId |> should equal expectedId
-        second.ProductCode |> should equal expectedSecond.ProductCode
-        second.Quantity |> should equal expectedSecond.Quantity
+        second.ProductCode |> should equal "G002"
+        second.Quantity |> should equal 2.5m
     }

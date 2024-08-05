@@ -7,9 +7,14 @@ open Validus.Operators
 
 open SharpStore.Web.Domain
 
-let productCodeValidator =
-    // todo Provide custom validation messages instead of using library ones.
-    ValidatorGroup(Check.String.notEmpty).And(Check.String.lessThanLen 3).Build()
+let widgetCodeValidator: Validator<string, WidgetCode.WidgetCode> =
+    (Check.String.pattern "^([wW]+)(\d{4})$") *|* WidgetCode.WidgetCode
+
+let gadgetCodeValidator: Validator<string, GadgetCode.GadgetCode> =
+    (Check.String.pattern "^([gG]+)(\d{3})$") *|* GadgetCode.GadgetCode
+
+let productCodeValidator: Validator<string, ProductCode> =
+    (widgetCodeValidator *|* Widget <|> gadgetCodeValidator *|* Gadget)
 
 let stringDecimalValidator: Validator<string, string> =
     let msg = sprintf "Please provide a valid %s"
@@ -30,10 +35,9 @@ let quantityValidator: Validator<string, decimal> =
         .And(Check.Decimal.lessThan 50m)
         .Build()
 
-let orderLineValidatorR (form: OrderLineForm) =
+let orderLineValidator (form: OrderLineForm) =
     validate {
         let! productCode = productCodeValidator (nameof form.ProductCode) form.ProductCode
-        // todo add test for validating quantity!
         and! quantity = quantityValidator (nameof form.Quantity) form.Quantity
 
         return
@@ -50,7 +54,7 @@ let orderValidator: OrderValidator =
 
             and! products =
                 form.OrderLines
-                |> Array.map orderLineValidatorR
+                |> Array.map orderLineValidator
                 |> Array.toList
                 |> ValidationResult.sequence
 

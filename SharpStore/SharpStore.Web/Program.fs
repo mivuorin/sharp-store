@@ -31,7 +31,7 @@ let main args =
         .AddTransient<SubmitOrder>(
             Func<IServiceProvider, SubmitOrder>(fun provider ->
                 provider.GetService<InsertOrder>()
-                |> submitOrder Validation.orderValidator orderId)
+                |> Domain.submitOrder Validation.orderValidator Domain.orderId)
         )
         .AddGiraffe()
     |> ignore

@@ -24,9 +24,14 @@ let orderTable = table<Order>
 let orderLineTable = table<OrderLine>
 
 let toOrderLine orderId (orderLine: ValidatedOrderLine) =
+    let code =
+        match orderLine.ProductCode with
+        | Widget widget -> WidgetCode.value widget
+        | Gadget gadget -> GadgetCode.value gadget
+
     { Id = Guid.NewGuid()
       OrderId = orderId
-      ProductCode = orderLine.ProductCode
+      ProductCode = code
       Quantity = orderLine.Quantity }
 
 let insertOrder: IDbConnection -> InsertOrder =

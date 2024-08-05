@@ -5,6 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="ProductCode.fs" />
         <Compile Include="Domain.fs" />
         <Compile Include="Validation.fs" />
         <Compile Include="Database.fs" />

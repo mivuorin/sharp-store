@@ -1,23 +1,58 @@
 ﻿module SharpStore.Test.ProductCodeValidationTest
 
+
 open Xunit
 open FsUnit
 
-open SharpStore.Web
+open SharpStore.Web.Validation
 
-let validator = Validation.productCodeValidator "test"
-
-[<Fact>]
-let Product_code_is_required () =
-    let result = validator ""
-    result |> Result.isError |> should equal true
+let widgetValidator = widgetCodeValidator "test"
+let gadgetValidator = gadgetCodeValidator "test"
 
 [<Fact>]
-let Product_code_is_too_long () =
-    let result = validator "asd"
-    result |> Result.isError |> should equal true
+let Invalid_widget_code_empty () =
+    widgetValidator "" |> Result.isError |> should equal true
 
 [<Fact>]
-let Valid_product_code () =
-    let result = validator "as"
-    result |> Result.isOk |> should equal true
+let Invalid_widget_code_too_short () =
+    widgetValidator "W123" |> Result.isError |> should equal true
+
+[<Fact>]
+let Invalid_widget_code_too_long () =
+    widgetValidator "W12345" |> Result.isError |> should equal true
+
+[<Fact>]
+let Invalid_widget_code_not_starting_with_w () =
+    widgetValidator "a1234" |> Result.isError |> should equal true
+
+[<Fact>]
+let Valid_widget_code () =
+    widgetValidator "w1234" |> Result.isOk |> should equal true
+
+[<Fact>]
+let Valid_widget_code_capital_letter () =
+    widgetValidator "W1234" |> Result.isOk |> should equal true
+
+[<Fact>]
+let Invalid_gadget_code_empty () =
+    gadgetValidator "" |> Result.isError |> should equal true
+
+[<Fact>]
+let Invalid_gadget_code_too_short () =
+    gadgetValidator "G12" |> Result.isError |> should equal true
+
+[<Fact>]
+let Invalid_gadget_code_too_long () =
+    gadgetValidator "G1234" |> Result.isError |> should equal true
+
+[<Fact>]
+let Invalid_gadget_code_not_starting_with_g () =
+    gadgetValidator "g1234" |> Result.isError |> should equal true
+
+[<Fact>]
+let Valid_gadget_code () =
+    gadgetValidator "g123" |> Result.isOk |> should equal true
+
+[<Fact>]
+let Valid_gadget_code_capital_letter () =
+    gadgetValidator "g123" |> Result.isOk |> should equal true

@@ -1,4 +1,4 @@
-﻿module SharpStore.Web.Domain
+﻿namespace SharpStore.Web.Domain
 
 open System
 open System.Threading.Tasks
@@ -14,9 +14,8 @@ type OrderLineForm =
 [<CLIMutable>]
 type OrderForm = { OrderLines: OrderLineForm array }
 
-// todo Own type for product code.
 type ValidatedOrderLine =
-    { ProductCode: string
+    { ProductCode: ProductCode
       Quantity: decimal }
 
 type ValidatedOrder = { ProductCodes: ValidatedOrderLine list }
@@ -30,22 +29,24 @@ type OrderCreatedResult = Result<OrderCreated, Map<string, string list>>
 
 // todo Have own type for order id instead of guid.
 type OrderId = unit -> Guid
-let orderId: OrderId = Guid.NewGuid
 
 type SubmitOrder = OrderForm -> Task<OrderCreatedResult>
 
 type InsertOrder = Guid -> ValidatedOrder -> Task
 
-let submitOrder: OrderValidator -> OrderId -> InsertOrder -> SubmitOrder =
-    fun validator orderId insertOrder ->
-        fun form ->
-            task {
-                let validated = validator form
+module Domain =
+    let orderId: OrderId = Guid.NewGuid
 
-                match validated with
-                | Result.Error error -> return Error error
-                | Result.Ok order ->
-                    let id = orderId ()
-                    do! insertOrder id order
-                    return Ok { id = id }
-            }
+    let submitOrder: OrderValidator -> OrderId -> InsertOrder -> SubmitOrder =
+        fun validator orderId insertOrder ->
+            fun form ->
+                task {
+                    let validated = validator form
+
+                    match validated with
+                    | Result.Error error -> return Error error
+                    | Result.Ok order ->
+                        let id = orderId ()
+                        do! insertOrder id order
+                        return Ok { id = id }
+                }

@@ -23,7 +23,7 @@ let Submit_should_return_validation_errors_when_form_is_invalid () =
     let insertOrder: InsertOrder = fun _ _ -> Task.CompletedTask
 
     task {
-        let! actual = submitOrder validator Guid.NewGuid insertOrder form
+        let! actual = Domain.submitOrder validator Guid.NewGuid insertOrder form
         actual |> should equal expected
     }
 
@@ -41,6 +41,6 @@ let Submit_should_create_order_id () =
     let insertOrder: InsertOrder = fun _ _ -> Task.CompletedTask
 
     task {
-        let! actual = submitOrder validator orderId insertOrder form
+        let! actual = Domain.submitOrder validator orderId insertOrder form
         actual |> should equal expected
     }

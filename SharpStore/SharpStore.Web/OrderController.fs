@@ -175,7 +175,7 @@ let addOrderLine: HttpHandler =
             let! orderForm = ctx.BindFormAsync<OrderForm>()
             let! orderLineForm = ctx.BindFormAsync<OrderLineForm>()
 
-            let validated = orderLineValidatorR orderLineForm
+            let validated = orderLineValidator orderLineForm
 
             let model =
                 match validated with
