@@ -18,7 +18,7 @@ let Submit_should_return_validation_errors_when_form_is_invalid () =
 
     let expected: OrderCreatedResult = errors |> Error
 
-    let form: OrderForm = { ProductCodes = [ "" ] }
+    let form: OrderForm = { ProductCodes = [| "" |] }
 
     let insertOrder: InsertOrder = fun _ _ -> Task.CompletedTask
 
@@ -37,7 +37,7 @@ let Submit_should_create_order_id () =
 
     let expected: OrderCreatedResult = { id = expectedOrderId } |> Ok
 
-    let form: OrderForm = { ProductCodes = [ "" ] }
+    let form: OrderForm = { ProductCodes = [| "" |] }
 
     let insertOrder: InsertOrder = fun _ _ -> Task.CompletedTask
 

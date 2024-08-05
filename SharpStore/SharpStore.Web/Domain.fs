@@ -7,10 +7,10 @@ open Microsoft.FSharp.Core
 [<CLIMutable>]
 type ProductForm = { ProductCode: string }
 
+// Giraffe bindFormAsync<T> function has bug which leaves list uninitialized (null) when
+// there is no form values to bind. To avoid this use array instead of list.
 [<CLIMutable>]
-type OrderForm = {
-    ProductCodes: string list
-}
+type OrderForm = { ProductCodes: string array }
 
 type ValidatedProduct = { ProductCode: string }
 

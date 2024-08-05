@@ -1,8 +1,6 @@
 ﻿module SharpStore.Web.OrderController
 
 open System
-open System.Threading.Tasks
-open Microsoft.AspNetCore.Http
 
 open Giraffe
 open Giraffe.Htmx.Handlers
@@ -10,13 +8,9 @@ open Giraffe.ViewEngine
 open Giraffe.ViewEngine.Htmx
 open Giraffe.EndpointRouting
 
+open Microsoft.FSharp.Collections
 open SharpStore.Web.Domain
 open SharpStore.Web.Validation
-
-// Fixed form binding problem where ProductCodes is left uninitialized when form has is no values.
-type OrderFormC(productCodes: string list) =
-    member val ProductCodes = productCodes with get, set
-    new() = OrderFormC([])
 
 type Model =
     { OrderForm: OrderForm
@@ -24,7 +18,7 @@ type Model =
       Errors: Map<string, string list> }
 
 let init: Model =
-    { OrderForm = { ProductCodes = [] }
+    { OrderForm = { ProductCodes = Array.empty }
       ProductForm = { ProductCode = "" }
       Errors = Map.empty }
 
@@ -103,8 +97,8 @@ let orderForm (model: Model) =
             ]
         ]
 
-    let productCodes: XmlNode list =
-        model.OrderForm.ProductCodes |> List.mapi productCode
+    let productCodes =
+        model.OrderForm.ProductCodes |> Array.mapi productCode |> Array.toList
 
     form
         [ _id "order-form" ]
@@ -161,18 +155,10 @@ let post: HttpHandler =
 
 let complete (orderId: Guid) : HttpHandler = orderId |> submittedView |> htmlView
 
-let bindForm (ctx: HttpContext) : Task<OrderForm> =
-    task {
-        let! form = ctx.BindFormAsync<OrderFormC>()
-        // BindFormAsync does not initialize list if it's missing from request.
-        // todo Fix form binding by using class type instead of mutable record.
-        return { OrderForm.ProductCodes = form.ProductCodes }
-    }
-
 let addProduct: HttpHandler =
     fun next ctx ->
         task {
-            let! form = bindForm ctx
+            let! form = ctx.BindFormAsync<OrderForm>()
             let! productForm = ctx.BindFormAsync<ProductForm>()
 
             let validated = productValidator productForm
@@ -180,7 +166,7 @@ let addProduct: HttpHandler =
             let model =
                 match validated with
                 | Ok product ->
-                    { OrderForm = { form with ProductCodes = form.ProductCodes @ [ product.ProductCode ] }
+                    { OrderForm = { form with ProductCodes = Array.append form.ProductCodes [| product.ProductCode |] }
                       ProductForm = { ProductCode = "" }
                       Errors = Map.empty }
 
@@ -196,11 +182,11 @@ let addProduct: HttpHandler =
 let deleteProduct index : HttpHandler =
     fun next ctx ->
         task {
-            let! form = bindForm ctx
+            let! form = ctx.BindFormAsync<OrderForm>()
             let! productForm = ctx.BindFormAsync<ProductForm>()
 
             let model =
-                { OrderForm = { form with ProductCodes = form.ProductCodes |> List.removeAt index }
+                { OrderForm = { form with ProductCodes = form.ProductCodes |> Array.removeAt index }
                   ProductForm = productForm
                   Errors = Map.empty }
 
