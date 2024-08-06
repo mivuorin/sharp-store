@@ -2,45 +2,45 @@
 
 open System
 open System.Threading.Tasks
-open Validus
 open Xunit
 open FsUnit
 
+open SharpStore.Web
 open SharpStore.Web.Domain
 
 [<Fact>]
-let Submit_should_return_validation_errors_when_form_is_invalid () =
-    let errors =
-        ValidationErrors.create "ProductCode" [ "Error message" ]
-        |> ValidationErrors.toMap
+let Submit_order_when_order_is_invalid () =
+    let insertOrder: InsertOrder = fun _ -> Task.CompletedTask
+    let getProductId: GetProductId = fun _ -> Task.FromResult None
 
-    let validator: OrderValidator = fun _ -> Error errors
-
-    let expected: OrderCreatedResult = errors |> Error
-
-    let form: OrderForm = { OrderLines = [||] }
-
-    let insertOrder: InsertOrder = fun _ _ -> Task.CompletedTask
+    let submitOrder =
+        Service.submitOrder Validation.orderValidator getProductId Guid.NewGuid insertOrder
 
     task {
-        let! actual = Domain.submitOrder validator Guid.NewGuid insertOrder form
-        actual |> should equal expected
+        let form: OrderForm = { OrderLines = [||] }
+
+        let! actual = submitOrder form
+        actual |> Option.isNone |> should equal true
     }
 
 [<Fact>]
-let Submit_should_create_order_id () =
-    let validator: OrderValidator = fun _ -> Ok { ProductCodes = [] }
-
+let Submit_order () =
     let expectedOrderId = Guid.NewGuid()
     let orderId: OrderId = fun () -> expectedOrderId
 
-    let expected: OrderCreatedResult = { id = expectedOrderId } |> Ok
+    let expected = Some { OrderCreated.Id = expectedOrderId }
 
-    let form: OrderForm = { OrderLines = [||] }
+    let form: OrderForm =
+        { OrderLines =
+            [| { ProductCode = "W0001"
+                 Quantity = "1" } |] }
 
-    let insertOrder: InsertOrder = fun _ _ -> Task.CompletedTask
+    // todo How to check that correct product is passed to insertOrder? With mock is would be possible
+    let insertOrder: InsertOrder = fun _ -> Task.CompletedTask
+
+    let getProductId: GetProductId = fun _ -> Task.FromResult None
 
     task {
-        let! actual = Domain.submitOrder validator orderId insertOrder form
+        let! actual = Service.submitOrder Validation.orderValidator getProductId orderId insertOrder form
         actual |> should equal expected
     }

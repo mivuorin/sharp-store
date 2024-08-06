@@ -4,6 +4,8 @@ open System
 open System.Threading.Tasks
 open Microsoft.FSharp.Core
 
+open Validus
+
 [<CLIMutable>]
 type OrderLineForm =
     { ProductCode: string
@@ -18,35 +20,33 @@ type ValidatedOrderLine =
     { ProductCode: ProductCode
       Quantity: decimal }
 
-type ValidatedOrder = { ProductCodes: ValidatedOrderLine list }
+type ValidatedOrder = { OrderLines: ValidatedOrderLine list }
 
-type OrderCreated = { id: Guid }
+type OrderLine =
+    { ProductId: Guid
+      Quantity: decimal }
 
-type OrderLineValidator = OrderLineForm -> Result<ValidatedOrderLine, Map<string, string list>>
-type OrderValidator = OrderForm -> Result<ValidatedOrder, Map<string, string list>>
+type Order =
+    { Id: Guid
+      OrderLines: OrderLine list } // todo could use F#+ NonEmptyList
 
-type OrderCreatedResult = Result<OrderCreated, Map<string, string list>>
+type OrderCreated = { Id: Guid }
+
+type OrderLineValidator = OrderLineForm -> ValidationResult<ValidatedOrderLine>
+type OrderValidator = OrderForm -> ValidationResult<ValidatedOrder>
 
 // todo Have own type for order id instead of guid.
 type OrderId = unit -> Guid
 
-type SubmitOrder = OrderForm -> Task<OrderCreatedResult>
+// services
+type ValidateOrderLine = OrderLineForm -> Task<ValidationResult<OrderLine>>
 
-type InsertOrder = Guid -> ValidatedOrder -> Task
+// todo Better return type? Now it can just be Option
+type SubmitOrder = OrderForm -> Task<OrderCreated option>
 
-module Domain =
-    let orderId: OrderId = Guid.NewGuid
+// Database
+type InsertOrder = Order -> Task
+type GetProductId = ProductCode -> Task<Guid option>
 
-    let submitOrder: OrderValidator -> OrderId -> InsertOrder -> SubmitOrder =
-        fun validator orderId insertOrder ->
-            fun form ->
-                task {
-                    let validated = validator form
+// todo move to Services module
 
-                    match validated with
-                    | Result.Error error -> return Error error
-                    | Result.Ok order ->
-                        let id = orderId ()
-                        do! insertOrder id order
-                        return Ok { id = id }
-                }

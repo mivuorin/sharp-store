@@ -9,56 +9,76 @@ open SharpStore.Web.Domain
 
 let registerTypes () = OptionTypes.register ()
 
-let connection: string -> IDbConnection =
-    fun connectionString -> new Microsoft.Data.SqlClient.SqlConnection(connectionString)
+type Connection = unit -> IDbConnection
+
+let connection (connectionString: string) : Connection =
+    fun () -> new Microsoft.Data.SqlClient.SqlConnection(connectionString)
 
 type Order = { Id: Guid }
 
 type OrderLine =
     { Id: Guid
       OrderId: Guid
-      ProductCode: string
+      ProductId: Guid
       Quantity: decimal }
+
+type Product =
+    { Id: Guid
+      ProductCode: string }
 
 let orderTable = table<Order>
 let orderLineTable = table<OrderLine>
+let productTable = table<Product>
 
-let toOrderLine orderId (orderLine: ValidatedOrderLine) =
-    let code =
-        match orderLine.ProductCode with
-        | Widget widget -> WidgetCode.value widget
-        | Gadget gadget -> GadgetCode.value gadget
-
+let toOrderLine (orderId: Guid) (orderLine: Domain.OrderLine) =
     { Id = Guid.NewGuid()
       OrderId = orderId
-      ProductCode = code
+      ProductId = orderLine.ProductId
       Quantity = orderLine.Quantity }
 
-let insertOrder: IDbConnection -> InsertOrder =
-    fun connection ->
-        fun orderId validatedOrder ->
-            task {
-                connection.Open()
+let insertOrder (connection: Connection) : InsertOrder =
+    fun order ->
+        task {
+            use connection = connection ()
+            connection.Open()
 
-                let transaction: IDbTransaction = connection.BeginTransaction()
+            let transaction: IDbTransaction = connection.BeginTransaction()
 
-                let insertOrder =
-                    insert {
-                        into orderTable
-                        value { Id = orderId }
-                    }
+            let insertOrder =
+                insert {
+                    into orderTable
+                    value { Id = order.Id }
+                }
 
-                do! connection.InsertAsync(insertOrder, transaction) :> Task
+            do! connection.InsertAsync(insertOrder, transaction) :> Task
 
-                let orderLines = validatedOrder.ProductCodes |> List.map (toOrderLine orderId)
+            let orderLines = order.OrderLines |> List.map (toOrderLine order.Id)
 
-                let insertOrderLines =
-                    insert {
-                        into orderLineTable
-                        values orderLines
-                    }
+            let insertOrderLines =
+                insert {
+                    into orderLineTable
+                    values orderLines
+                }
 
-                do! connection.InsertAsync(insertOrderLines, transaction) :> Task
+            do! connection.InsertAsync(insertOrderLines, transaction) :> Task
 
-                transaction.Commit()
-            }
+            transaction.Commit()
+        }
+
+let getProductId (connection: Connection) : GetProductId =
+    fun code ->
+        task {
+            use connection = connection ()
+
+            let code = ProductCode.value code
+
+            let! products =
+                select {
+                    for product in productTable do
+                        where (product.ProductCode = code)
+                }
+                |> connection.SelectAsync<Product>
+
+            return Seq.tryHead products |> Option.map _.Id
+
+        }

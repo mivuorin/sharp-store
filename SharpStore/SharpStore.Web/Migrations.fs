@@ -1,5 +1,6 @@
 ﻿module SharpStore.Web.Migrations
 
+open System
 open FluentMigrator
 
 [<Migration(1L, description = "Create Order table")>]
@@ -53,3 +54,59 @@ type AddQuantityColumnToOrderLineTable() =
 
     override this.Down() =
         this.Delete.Column("Quantity").FromTable("OrderLine") |> ignore
+
+[<Migration(4L, description = "Product table")>]
+type ProductTable() =
+    inherit Migration()
+
+    override this.Up() =
+        let product = this.Create.Table("Product")
+        product.WithColumn("Id").AsGuid().PrimaryKey() |> ignore
+        product.WithColumn("ProductCode").AsString(32).NotNullable() |> ignore
+
+        this.Delete.Column("ProductCode").FromTable("OrderLine") |> ignore
+
+        this.Alter.Table("OrderLine").AddColumn("ProductId").AsGuid().NotNullable()
+        |> ignore
+
+        this.Create
+            .ForeignKey()
+            .FromTable("OrderLine")
+            .ForeignColumn("ProductId")
+            .ToTable("Product")
+            .PrimaryColumn("Id")
+        |> ignore
+
+        this.Create.UniqueConstraint().OnTable("Product").Column("ProductCode") |> ignore
+
+        this.Insert.IntoTable("Product")
+            .Row({| Id = Guid.NewGuid(); ProductCode = "W0001" |})
+            .Row({| Id = Guid.NewGuid(); ProductCode = "W0002" |})
+            .Row({| Id = Guid.NewGuid(); ProductCode = "W0003" |})
+            .Row({| Id = Guid.NewGuid(); ProductCode = "W0004" |})
+            .Row({| Id = Guid.NewGuid(); ProductCode = "W0005" |})
+            .Row({| Id = Guid.NewGuid(); ProductCode = "G100" |})
+            .Row({| Id = Guid.NewGuid(); ProductCode = "G200" |})
+            .Row({| Id = Guid.NewGuid(); ProductCode = "G300" |})
+            .Row({| Id = Guid.NewGuid(); ProductCode = "G400" |})
+            .Row({| Id = Guid.NewGuid(); ProductCode = "G500" |})
+        |> ignore
+
+    override this.Down() =
+        this.Delete
+            .ForeignKey()
+            .FromTable("OrderLine")
+            .ForeignColumn("ProductId")
+            .ToTable("Product")
+            .PrimaryColumn("Id")
+
+        this.Alter
+            .Table("OrderLine")
+            .AddColumn("ProductCode")
+            .AsString(32)
+            .NotNullable()
+        |> ignore
+
+        this.Delete.Column("ProductId").FromTable("OrderLine") |> ignore
+        this.Delete.UniqueConstraint().FromTable("Product").Column("ProductCode")
+        this.Delete.Table("Product") |> ignore

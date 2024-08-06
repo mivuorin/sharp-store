@@ -10,7 +10,6 @@ open Giraffe.EndpointRouting
 
 open Microsoft.FSharp.Collections
 open SharpStore.Web.Domain
-open SharpStore.Web.Validation
 open Validus
 
 type Model =
@@ -81,7 +80,7 @@ let orderFormView (model: Model) =
 
     let orderLineForm fieldName index (product: OrderLineForm) =
         div [ _class "row mb-3" ] [
-            div [ _class "col-4" ] [
+            div [ _class "col-5" ] [
                 input [
                     _class "form-control-plaintext"
                     _type "text"
@@ -154,14 +153,13 @@ let post: HttpHandler =
 
             // Send client side redirect or just response with result?
             match result with
-            | Ok created ->
-                let short = ShortGuid.fromGuid created.id
+            | Some created ->
+                let short = ShortGuid.fromGuid created.Id
                 let url = $"/thanks/{short}"
-
                 return! withHxRedirect url next ctx
 
             // todo Disable submit if there is problem in order
-            | Error _ ->
+            | None ->
                 return!
                     HttpStatusCodeHandlers.ServerErrors.internalError
                         (text "Something went wrong when processing order!")
@@ -172,11 +170,14 @@ let post: HttpHandler =
 let addOrderLine: HttpHandler =
     fun next ctx ->
         task {
+            let validateOrderLine = ctx.GetService<ValidateOrderLine>()
+
             let! orderForm = ctx.BindFormAsync<OrderForm>()
             let! orderLineForm = ctx.BindFormAsync<OrderLineForm>()
 
-            let validated = orderLineValidator orderLineForm
+            let! validated = validateOrderLine orderLineForm
 
+            // todo Move OrderForm mapping logic into validateOrderLine function
             let model =
                 match validated with
                 | Ok _ ->

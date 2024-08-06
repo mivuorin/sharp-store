@@ -35,15 +35,16 @@ let quantityValidator: Validator<string, decimal> =
         .And(Check.Decimal.lessThan 50m)
         .Build()
 
-let orderLineValidator (form: OrderLineForm) =
-    validate {
-        let! productCode = productCodeValidator (nameof form.ProductCode) form.ProductCode
-        and! quantity = quantityValidator (nameof form.Quantity) form.Quantity
+let orderLineValidator: OrderLineValidator =
+    fun form ->
+        validate {
+            let! productCode = productCodeValidator (nameof form.ProductCode) form.ProductCode
+            and! quantity = quantityValidator (nameof form.Quantity) form.Quantity
 
-        return
-            { ProductCode = productCode
-              Quantity = quantity }
-    }
+            return
+                { ProductCode = productCode
+                  Quantity = quantity }
+        }
 
 let orderValidator: OrderValidator =
     fun form ->
@@ -51,14 +52,11 @@ let orderValidator: OrderValidator =
 
         validate {
             let! _ = orderLineCountValidator "OrderLines" form.OrderLines
-
-            and! products =
+            and! orderLines =
                 form.OrderLines
                 |> Array.map orderLineValidator
                 |> Array.toList
                 |> ValidationResult.sequence
 
-
-            return { ProductCodes = products }
+            return { OrderLines = orderLines }
         }
-        |> Result.mapError ValidationErrors.toMap

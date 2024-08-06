@@ -1,7 +1,6 @@
 module SharpStore.Web.Program
 
 open System
-open System.Data
 open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.DependencyInjection
@@ -23,15 +22,33 @@ let main args =
 
     // todo Better way to register dependencies? Maybe https://github.com/Zaid-Ajaj/Giraffe.GoodRead
     builder.Services
-        .AddScoped<IDbConnection>(fun provider -> Database.connection connectionString)
+        .AddTransient<Database.Connection>(
+            Func<IServiceProvider, Database.Connection>(fun (prov: IServiceProvider) ->
+                Database.connection connectionString)
+        )
         .AddTransient<InsertOrder>(
             Func<IServiceProvider, InsertOrder>(fun (prov: IServiceProvider) ->
-                prov.GetService<IDbConnection>() |> Database.insertOrder)
+                prov.GetService<Database.Connection>() |> Database.insertOrder)
+        )
+        .AddTransient<GetProductId>(
+            Func<IServiceProvider, GetProductId>(fun (prov: IServiceProvider) ->
+                prov.GetService<Database.Connection>() |> Database.getProductId)
+        )
+        .AddTransient<ValidateOrderLine>(
+            Func<IServiceProvider, ValidateOrderLine>(fun (prov: IServiceProvider) ->
+                Service.validateOrderLine (prov.GetService<OrderLineValidator>()) (prov.GetService<GetProductId>()))
+        )
+        .AddTransient<OrderLineValidator>(
+            Func<IServiceProvider, OrderLineValidator>(fun (prov: IServiceProvider) ->
+                Validation.orderLineValidator)
         )
         .AddTransient<SubmitOrder>(
-            Func<IServiceProvider, SubmitOrder>(fun provider ->
-                provider.GetService<InsertOrder>()
-                |> Domain.submitOrder Validation.orderValidator Domain.orderId)
+            Func<IServiceProvider, SubmitOrder>(fun prov ->
+                Service.submitOrder
+                    Validation.orderValidator
+                    (prov.GetService<GetProductId>())
+                    Service.orderId
+                    (prov.GetService<InsertOrder>()))
         )
         .AddGiraffe()
     |> ignore
