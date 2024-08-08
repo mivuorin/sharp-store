@@ -1,7 +1,10 @@
 module SharpStore.Web.Program
 
 open System
+open System.Text.Json.Serialization
 open Microsoft.AspNetCore.Builder
+open Microsoft.AspNetCore.Http
+
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Configuration
@@ -10,6 +13,7 @@ open Giraffe
 open Giraffe.EndpointRouting
 
 open SharpStore.Web.Domain
+open SharpStore.Web.Session
 
 let endpoints = [ GET [ route "/" Index.view ] ] @ OrderController.orderEndpoints
 
@@ -39,24 +43,33 @@ let main args =
                 Service.validateOrderLine (prov.GetService<OrderLineValidator>()) (prov.GetService<GetProductId>()))
         )
         .AddTransient<OrderLineValidator>(
-            Func<IServiceProvider, OrderLineValidator>(fun (prov: IServiceProvider) ->
-                Validation.orderLineValidator)
+            Func<IServiceProvider, OrderLineValidator>(fun (prov: IServiceProvider) -> Validation.orderLineValidator)
         )
-        .AddTransient<SubmitOrder>(
-            Func<IServiceProvider, SubmitOrder>(fun prov ->
-                Service.submitOrder
-                    Validation.orderValidator
-                    (prov.GetService<GetProductId>())
-                    Service.orderId
-                    (prov.GetService<InsertOrder>()))
+        .AddTransient<Order.CreateOrder>(
+            Func<IServiceProvider, Order.CreateOrder>(fun prov -> Order.create Service.orderId)
         )
+        .AddTransient<OrderController.BeginOrderAction>(
+            Func<IServiceProvider, OrderController.BeginOrderAction>(fun prov ->
+                OrderController.initOrderView (prov.GetService<ISession>()) (prov.GetService<Order.CreateOrder>()))
+        )
+        .AddTransient<ISession, Session>()
+        .AddHttpContextAccessor()
+        .AddDistributedMemoryCache()
+        .AddSession(fun (options: SessionOptions) ->
+            options.Cookie.HttpOnly <- true
+            options.Cookie.IsEssential <- true)
         .AddGiraffe()
+        .AddSingleton<Json.ISerializer>(
+            SystemTextJson.Serializer(JsonFSharpOptions.Default().ToJsonSerializerOptions())
+        )
     |> ignore
+
 
     let app = builder.Build()
 
     app
         .UseStaticFiles()
+        .UseSession()
         .UseRouting()
         .UseEndpoints(fun e -> e.MapGiraffeEndpoints(endpoints))
     |> ignore

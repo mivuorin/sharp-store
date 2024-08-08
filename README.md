@@ -77,6 +77,41 @@ implements `IModelValidation<T>` interface
 
 This couples validation logic to dto which is unwanted.
 
+### Bug in Giraffe's form binging
+
+Giraffe's model binding uses `Activator.CreateInstance` which requires that bindable types are mutable.
+
+F# record types can be compiled to mutable instances with `[<CLIMutable>]` attribute. This does not change record itself
+to be mutable in F# code.
+
+There's bug in Giraffe's model binding code for `list` type, where model binding does not instantiate empty list when
+posted form data for that field is missing.
+This causes `list` to be initialized to `null` from `Activator.CreateInstance` which later
+causes `NullPointerException`.
+
+Model binding has different logic for  `array` type and properly initializes it as empty, so using `array` works as a
+workaround.
+
+Note that model binding follows Asp.NET model binding syntax where `<input>` elements needs to be properly named:
+
+```
+HTTP POST
+Products[0].Code: foo
+Products[1].Code: bar
+``` 
+
+Binds to:
+
+```fsharp
+type Product {
+  Code: string
+}
+
+type Model {
+  Products: Product array
+}
+```
+
 ## Unit testing Giraffe
 
 Giraffe's main abstraction is `HttpHandler` function:
@@ -135,13 +170,7 @@ let Index_view_handler_example_test () =
 ## Dependency Injection vs. Composition in Giraffe and Asp.NET
 
 It's not possible to fully compose Asp.NET application from pure functions because some dependencies have state and life
-cycle.
-
-For example database connection needs to be closed and disposed properly at the end of request, which couples it to http
-requests. This could be fixed by adding more logic into database layer, with some connection factory which would manage
-connection state, but this would add extra responsibilities and increase database layer complexity.
-
-Proper solution is to use existing Asp.NET IOC for managing instance life cycle and dependency injection.
+cycle, so there's requirement to register services with `ServiceCollection`.
 
 Sadly Giraffe has no abstraction for registering dependencies or dependency injection and relies on service locator
 antipattern.
@@ -149,4 +178,27 @@ antipattern.
 ```fsharp
 let submitOrder = ctx.GetService<SubmitOrder>()
 ```
+
+It's possible to register pure functions as types (`InsertOrder`) which can be composed with partial application.
+Interop with various `ServiceCollection` methods requires to use `Func<T>()` wrapper class which makes service
+registration code verbose.
+
+Using [Giraffe.Goodread](https://github.com/Zaid-Ajaj/Giraffe.GoodRead) library can improve service registration code.
+
+```fsharp
+builder.Services
+   .AddTransient<InsertOrder>(
+      Func<IServiceProvider, InsertOrder>(fun (prov: IServiceProvider) ->
+          prov.GetService<Database.Connection>() |> Database.insertOrder)
+   )
+```
+
+Registering open generic function types does not seem to be possible, so these need to be wrapped in interfaces.
+
+## F# Json serialization
+
+By default `System.Text.Json` json serializer does not support discriminated union types.
+
+[FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) library adds json converters which support F#
+types.
 

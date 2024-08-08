@@ -25,7 +25,7 @@ let main (content: XmlNode list) : XmlNode =
             meta [ _charset "utf-8" ]
             meta [
                 _name "viewport"
-                _content "width-device-width, initial-scale=1"
+                _content "width=device-width, initial-scale=1"
             ]
             title [] [ str "SharpStore" ]
             link [

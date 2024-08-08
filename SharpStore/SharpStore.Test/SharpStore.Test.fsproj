@@ -14,7 +14,7 @@
         <Compile Include="ProductCodeValidationTest.fs" />
         <Compile Include="QuantityValidationTest.fs" />
         <Compile Include="OrderFormValidationTest.fs" />
-        <Compile Include="SubmitOrderTest.fs" />
+        <Compile Include="OrderControllerTest.fs" />
         <Compile Include="Program.fs"/>
     </ItemGroup>
 

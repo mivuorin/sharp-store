@@ -52,6 +52,7 @@ let orderValidator: OrderValidator =
 
         validate {
             let! _ = orderLineCountValidator "OrderLines" form.OrderLines
+
             and! orderLines =
                 form.OrderLines
                 |> Array.map orderLineValidator

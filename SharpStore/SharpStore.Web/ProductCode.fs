@@ -1,5 +1,7 @@
 ﻿namespace SharpStore.Web.Domain
 
+// todo maybe move Union types to Domain and modules after it
+
 module WidgetCode =
 
     type WidgetCode = WidgetCode of string

@@ -77,19 +77,51 @@ type ProductTable() =
             .PrimaryColumn("Id")
         |> ignore
 
-        this.Create.UniqueConstraint().OnTable("Product").Column("ProductCode") |> ignore
+        this.Create.UniqueConstraint().OnTable("Product").Column("ProductCode")
+        |> ignore
 
-        this.Insert.IntoTable("Product")
-            .Row({| Id = Guid.NewGuid(); ProductCode = "W0001" |})
-            .Row({| Id = Guid.NewGuid(); ProductCode = "W0002" |})
-            .Row({| Id = Guid.NewGuid(); ProductCode = "W0003" |})
-            .Row({| Id = Guid.NewGuid(); ProductCode = "W0004" |})
-            .Row({| Id = Guid.NewGuid(); ProductCode = "W0005" |})
-            .Row({| Id = Guid.NewGuid(); ProductCode = "G100" |})
-            .Row({| Id = Guid.NewGuid(); ProductCode = "G200" |})
-            .Row({| Id = Guid.NewGuid(); ProductCode = "G300" |})
-            .Row({| Id = Guid.NewGuid(); ProductCode = "G400" |})
-            .Row({| Id = Guid.NewGuid(); ProductCode = "G500" |})
+        this.Insert
+            .IntoTable("Product")
+            .Row(
+                {| Id = Guid.NewGuid()
+                   ProductCode = "W0001" |}
+            )
+            .Row(
+                {| Id = Guid.NewGuid()
+                   ProductCode = "W0002" |}
+            )
+            .Row(
+                {| Id = Guid.NewGuid()
+                   ProductCode = "W0003" |}
+            )
+            .Row(
+                {| Id = Guid.NewGuid()
+                   ProductCode = "W0004" |}
+            )
+            .Row(
+                {| Id = Guid.NewGuid()
+                   ProductCode = "W0005" |}
+            )
+            .Row(
+                {| Id = Guid.NewGuid()
+                   ProductCode = "G100" |}
+            )
+            .Row(
+                {| Id = Guid.NewGuid()
+                   ProductCode = "G200" |}
+            )
+            .Row(
+                {| Id = Guid.NewGuid()
+                   ProductCode = "G300" |}
+            )
+            .Row(
+                {| Id = Guid.NewGuid()
+                   ProductCode = "G400" |}
+            )
+            .Row(
+                {| Id = Guid.NewGuid()
+                   ProductCode = "G500" |}
+            )
         |> ignore
 
     override this.Down() =

@@ -15,34 +15,40 @@ let connectionString =
 
 let connectionFactory = Database.connection connectionString
 
+let toValue =
+    function
+    | Ok value -> value
+    | Error _ -> failwith "Expected Ok result"
+
 [<Fact>]
 let Insert_order () =
     let expectedId = Service.orderId ()
 
-    let form: OrderForm =
-        { OrderLines =
-            [| { ProductCode = "W0001"
-                 Quantity = "1" }
-               { ProductCode = "G200"
-                 Quantity = "2,5" } |] }
+    let orderId: OrderId = fun () -> expectedId
+
+    let validateOrderLine =
+        Service.validateOrderLine Validation.orderLineValidator (Database.getProductId connectionFactory)
 
     task {
         use connection = connectionFactory ()
 
-        let validatedOrder =
-            match (Validation.orderValidator form) with
-            | Ok valid -> valid
-            | Error e -> Printf.failwithf $"Invalid order: %A{e}"
+        let order = Order.create orderId ()
 
-        let orderId: OrderId = fun () -> expectedId
+        let! line1 =
+            validateOrderLine
+                { ProductCode = "W0001"
+                  Quantity = "1" }
 
-        let toOrder =
-            Service.toOrder
-                orderId
-                (Database.getProductId connectionFactory)
+        let! line2 =
+            validateOrderLine
+                { ProductCode = "G200"
+                  Quantity = "2,5" }
 
-        let! order =
-            toOrder validatedOrder
+        let order =
+            { order with
+                OrderLines =
+                    [ (toValue line1)
+                      (toValue line2) ] }
 
         do! Database.insertOrder connectionFactory order
 
