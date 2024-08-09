@@ -7,10 +7,10 @@ open Validus.Operators
 
 open SharpStore.Web.Domain
 
-let widgetCodeValidator: Validator<string, WidgetCode.WidgetCode> =
+let widgetCodeValidator: Validator<string, WidgetCode> =
     (Check.String.pattern "^([wW]+)(\d{4})$") *|* WidgetCode.WidgetCode
 
-let gadgetCodeValidator: Validator<string, GadgetCode.GadgetCode> =
+let gadgetCodeValidator: Validator<string, GadgetCode> =
     (Check.String.pattern "^([gG]+)(\d{3})$") *|* GadgetCode.GadgetCode
 
 let productCodeValidator: Validator<string, ProductCode> =

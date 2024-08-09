@@ -13,9 +13,15 @@ type OrderLineForm =
     { ProductCode: string
       Quantity: string }
 
-
 [<CLIMutable>]
 type OrderForm = { OrderLines: OrderLineForm array }
+
+type WidgetCode = WidgetCode of string
+type GadgetCode = GadgetCode of string
+
+type ProductCode =
+    | Widget of WidgetCode
+    | Gadget of GadgetCode
 
 type ValidatedOrderLine =
     { ProductCode: ProductCode
@@ -54,3 +60,15 @@ module Order =
         fun () ->
             { Order.Id = orderId ()
               OrderLines = [] }
+
+module WidgetCode =
+    let value (WidgetCode code) = code
+
+module GadgetCode =
+    let value (GadgetCode code) = code
+
+module ProductCode =
+    let value (code: ProductCode) =
+        match code with
+        | Widget widgetCode -> WidgetCode.value widgetCode
+        | Gadget gadgetCode -> GadgetCode.value gadgetCode
