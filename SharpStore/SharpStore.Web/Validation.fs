@@ -2,6 +2,7 @@
 
 open System
 
+open System.Net.Mail
 open Validus
 open Validus.Operators
 
@@ -60,4 +61,43 @@ let orderValidator: OrderValidator =
                 |> ValidationResult.sequence
 
             return { OrderLines = orderLines }
+        }
+
+let private constant message : ValidationMessage = fun _ -> message
+
+let nameValidator: Validator<string, string> =
+    Check.WithMessage.String.notEmpty (constant "Please enter your full name")
+    >=> Check.WithMessage.String.lessThanLen 51 (constant "Name is too long")
+
+let emailValidator: Validator<string, string> =
+    let rule value =
+        let success, _ = MailAddress.TryCreate value
+        success
+
+    Validator.create (constant "Please enter valid email") rule
+
+// todo Validator composition hack just for converting types to Option
+let emptyToOption: Validator<String, string option> =
+    let foo =
+        function
+        | "" -> None
+        | value -> Some value
+    Validator.create (constant "") (fun _ -> true) *|* (foo)
+
+let phoneValidator: Validator<string, string option> =
+    emptyToOption
+    >=>
+    Check.optional (Check.WithMessage.String.betweenLen 1 16 (constant "Please enter valid phone number"))
+
+let contactValidator: ContactValidator =
+    fun form ->
+        validate {
+            let! name = nameValidator (nameof form.Name) form.Name
+            and! email = emailValidator (nameof form.Email) form.Email
+            and! phone = phoneValidator (nameof form.Phone) form.Phone
+
+            return
+                { Name = name
+                  Email = email
+                  Phone = phone }
         }

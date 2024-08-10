@@ -202,3 +202,33 @@ By default `System.Text.Json` json serializer does not support discriminated uni
 [FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) library adds json converters which support F#
 types.
 
+## Giraffe.ViewEngine does not have "empty" node
+
+Giraffe.ViewEngine htmlView -handler has the following signature:
+
+```fsharp
+val htmlView: htmlView: XmlNode -> HttpHandler
+```
+
+This means that all views must return single XmlNode instance and if view contains list of nodes, they need to be
+wrapped into container XmlNode.
+
+e.g. HTMX sometimes need to send responses containing list of html elements in case of rendering list or out-of-bound
+swaps.
+
+There is no "empty" node which would not render anything, so extra div or other html element is needed as a wrapper when
+composing nodes.
+
+## Giraffe routing and no support for Asp.NET MVC Url helper
+
+Currently, suggested best practice for routing in Giraffe, is to use endpoint routing.
+
+```fsharp
+app.UseEndpoints(fun e -> e.MapGiraffeEndpoints(endpoints))
+```
+
+Giraffe does not support named routes and there is no way to build url for link from route like what is possible with
+Asp.NET MVC Url helper or helper tags.
+
+This will lead to broken links in app when routes change, because routes are now loosely coupled from their usages and
+there is no help from type system.

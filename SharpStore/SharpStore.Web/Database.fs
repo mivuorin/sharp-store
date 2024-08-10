@@ -14,7 +14,9 @@ type Connection = unit -> IDbConnection
 let connection (connectionString: string) : Connection =
     fun () -> new Microsoft.Data.SqlClient.SqlConnection(connectionString)
 
-type Order = { Id: Guid }
+type Order =
+    { Id: Guid
+      ContactId: Guid }
 
 type OrderLine =
     { Id: Guid
@@ -26,9 +28,16 @@ type Product =
     { Id: Guid
       ProductCode: string }
 
+type Contact =
+    { Id: Guid
+      Name: string
+      Email: string
+      Phone: string option }
+
 let orderTable = table<Order>
 let orderLineTable = table<OrderLine>
 let productTable = table<Product>
+let contactTable = table<Contact>
 
 let toOrderLine (orderId: Guid) (orderLine: Domain.OrderLine) =
     { Id = Guid.NewGuid()
@@ -44,10 +53,27 @@ let insertOrder (connection: Connection) : InsertOrder =
 
             let transaction: IDbTransaction = connection.BeginTransaction()
 
+            let contact: Contact =
+                { Id = Guid.NewGuid()
+                  Name = order.Contact.Name
+                  Email = order.Contact.Email
+                  Phone = order.Contact.Phone }
+
+            let insertContact =
+                insert {
+                    into contactTable
+                    value contact
+                }
+
+            do! connection.InsertAsync(insertContact, transaction) :> Task
+
             let insertOrder =
                 insert {
                     into orderTable
-                    value { Id = order.Id }
+
+                    value
+                        { Id = order.Id
+                          ContactId = contact.Id }
                 }
 
             do! connection.InsertAsync(insertOrder, transaction) :> Task
@@ -81,5 +107,4 @@ let getProductId (connection: Connection) : GetProductId =
                 |> connection.SelectAsync<Product>
 
             return Seq.tryHead products |> Option.map _.Id
-
         }

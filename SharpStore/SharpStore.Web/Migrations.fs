@@ -142,3 +142,37 @@ type ProductTable() =
         this.Delete.Column("ProductId").FromTable("OrderLine") |> ignore
         this.Delete.UniqueConstraint().FromTable("Product").Column("ProductCode")
         this.Delete.Table("Product") |> ignore
+
+
+[<Migration(5L, description = "Contact table")>]
+type ContactTable() =
+    inherit Migration()
+
+    override this.Up() =
+        let contact = this.Create.Table("Contact")
+        contact.WithColumn("Id").AsGuid().PrimaryKey() |> ignore
+        contact.WithColumn("Name").AsString(50).NotNullable() |> ignore
+        contact.WithColumn("Email").AsString(254).NotNullable() |> ignore
+        contact.WithColumn("Phone").AsString(16).Nullable() |> ignore
+
+        this.Alter.Table("Order").AddColumn("ContactId").AsGuid().NotNullable |> ignore
+
+        this.Create
+            .ForeignKey()
+            .FromTable("Order")
+            .ForeignColumn("ContactId")
+            .ToTable("Contact")
+            .PrimaryColumn("Id")
+        |> ignore
+
+    override this.Down() =
+        this.Delete
+            .ForeignKey()
+            .FromTable("Order")
+            .ForeignColumn("ContactId")
+            .ToTable("Contact")
+            .PrimaryColumn("Id")
+
+        this.Delete.Table("Contact") |> ignore
+
+        this.Delete.Column("ContactId").FromTable("Order") |> ignore

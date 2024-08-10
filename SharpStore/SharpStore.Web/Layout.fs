@@ -6,19 +6,54 @@ open Giraffe.ViewEngine
 let _data_bs_toggle = attr "data-bs-toggle"
 let _data_bs_target = attr "data-bs-target"
 
-let scripts =
-    [ script [
-          _src "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-          _integrity "sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-          _crossorigin "anonymous"
-      ] []
-      script [
-          _src "https://unpkg.com/htmx.org@2.0.1"
-          _integrity "sha384-QWGpdj554B4ETpJJC9z+ZHJcA/i59TyjxEPXiiUgN2WmTyV5OEZWCD6gQhgkdpB/"
-          _crossorigin "anonymous"
-      ] [] ]
+let private navbar =
+    nav [ _class "navbar navbar-expand-sm" ] [
+        // todo fix other links alignment onto 2nd line
+        div [ _class "container-fluid align-items-end" ] [
+            a [
+                _class "navbar-brand"
+                _href "/"
+            ] [
+                div [ _class "d-flex flex-row column-gap-2 align-items-center" ] [
+                    img [
+                        _style "height: 3rem"
+                        _src "/shovel_64.png"
+                    ]
+                    div [ _class "d-flex flex-column" ] [
+                        div [ _class "fs-2" ] [ str "SharpStore" ]
+                        div [ _class "fs-6" ] [ str "Best source for Widgets & Gadgets" ]
+                    ]
+                ]
+            ]
 
+            button [
+                _class "navbar-toggler"
+                _type "button"
+                _data_bs_toggle "collapse"
+                _data_bs_target "#navbar-collapse-content"
+            ] [ span [ _class "navbar-toggler-icon" ] [] ]
 
+            div [
+                _id "navbar-collapse-content"
+                _class "collapse navbar-collapse"
+            ] [
+                ul [ _class "navbar-nav me-auto mb-auto" ] [
+                    li [ _class "nav-item" ] [
+                        a [
+                            _class "nav-link active"
+                            _href "/about"
+                        ] [ str "About" ]
+                    ]
+                ]
+                a [
+                    _class "btn btn-primary"
+                    _href "/order"
+                ] [ str "Order Here!" ]
+            ]
+        ]
+    ]
+
+// todo wrapping single xmlnode into list is a bit fishy composition
 let main (content: XmlNode list) : XmlNode =
     html [] [
         head [] [
@@ -35,52 +70,22 @@ let main (content: XmlNode list) : XmlNode =
                 _crossorigin "anonymous"
             ]
         ]
-        body
-            []
-            ([ nav [ _class "navbar navbar-expand-lg" ] [
-                   div [ _class "container-fluid" ] [
-                       a [
-                           _class "navbar-brand"
-                           _href "/"
-                       ] [
-                           span [] [
-                               // todo create logo in vector format
-                               img [
-                                   _style "height: 2rem"
-                                   _src "/shovel_64.png"
-                               ]
-                               str "SharpStore"
-                           ]
-                       ]
-                       button [
-                           _class "navbar-toggler"
-                           _type "button"
-                           _data_bs_toggle "collapse"
-                           _data_bs_target "#navbar-collapse-content"
-                       ] [ span [ _class "navbar-toggler-icon" ] [] ]
+        body [] [
+            div [ _class "container-sm" ] [
+                navbar
+                div [ _class "container" ] content
+            ]
+            script [
+                _src "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+                _integrity "sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+                _crossorigin "anonymous"
+            ] []
 
-                       div [
-                           _id "navbar-collapse-content"
-                           _class "collapse navbar-collapse"
-                       ] [
-                           ul [ _class "navbar-nav me-auto mb-auto" ] [
-                               li [ _class "nav-item" ] [
-                                   a [
-                                       _class "nav-link active"
-                                       _href "/about"
-                                   ] [ str "About" ]
-                               ]
-                           ]
-                           a [
-                               _class "btn btn-primary"
-                               _href "/order"
-                           ] [ str "Order" ]
-                       ]
-                   ]
-               ]
+            script [
+                _src "https://unpkg.com/htmx.org@2.0.1"
+                _integrity "sha384-QWGpdj554B4ETpJJC9z+ZHJcA/i59TyjxEPXiiUgN2WmTyV5OEZWCD6gQhgkdpB/"
+                _crossorigin "anonymous"
+            ] []
+        ]
 
-               div [ _class "container" ] content
-
-               ]
-             @ scripts)
     ]

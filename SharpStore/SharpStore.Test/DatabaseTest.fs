@@ -15,24 +15,15 @@ let connectionString =
 
 let connectionFactory = Database.connection connectionString
 
-let toValue =
-    function
-    | Ok value -> value
-    | Error _ -> failwith "Expected Ok result"
-
 [<Fact>]
 let Insert_order () =
-    let expectedId = Service.orderId ()
-
-    let orderId: OrderId = fun () -> expectedId
+    let expectedId = Service.generateOrderId ()
 
     let validateOrderLine =
         Service.validateOrderLine Validation.orderLineValidator (Database.getProductId connectionFactory)
 
     task {
         use connection = connectionFactory ()
-
-        let order = Order.create orderId ()
 
         let! line1 =
             validateOrderLine
@@ -44,11 +35,18 @@ let Insert_order () =
                 { ProductCode = "G200"
                   Quantity = "2,5" }
 
-        let order =
-            { order with
-                OrderLines =
-                    [ (toValue line1)
-                      (toValue line2) ] }
+        let orderLines =
+            [ (Result.toValue line1)
+              (Result.toValue line2) ]
+
+        let contactForm: ContactForm =
+            { Email = "test@test.com"
+              Name = "Test User"
+              Phone = "+1230006549874" }
+
+        let contact = Validation.contactValidator contactForm |> Result.toValue
+
+        let order = Order.create expectedId orderLines contact
 
         do! Database.insertOrder connectionFactory order
 

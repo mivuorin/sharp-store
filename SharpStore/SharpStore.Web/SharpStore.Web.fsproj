@@ -6,13 +6,18 @@
 
     <ItemGroup>
         <Compile Include="Domain.fs" />
-        <Compile Include="Service.fs" />
         <Compile Include="Validation.fs" />
+        <Compile Include="ValidationErrors.fs" />
+        <Compile Include="Service.fs" />
         <Compile Include="Database.fs" />
         <Compile Include="Session.fs" />
+        <Compile Include="Input.fs" />
         <Compile Include="Layout.fs" />
         <Compile Include="Index.fs" />
-        <Compile Include="OrderController.fs" />
+        <Compile Include="OrderLinesStep.fs" />
+        <Compile Include="ReviewStep.fs" />
+        <Compile Include="ContactStep.fs" />
+        <Compile Include="SubmitStep.fs" />
         <Compile Include="Migrations.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>

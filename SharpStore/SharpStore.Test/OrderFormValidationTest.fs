@@ -55,7 +55,6 @@ let Order_line_widget () =
     | Ok orderLine -> orderLine |> should equal expected
     | Error _ -> Assert.Fail("Expected OK result")
 
-
 [<Fact>]
 let One_order_line_is_required () =
     let form: OrderForm = { OrderLines = Array.empty }
@@ -72,7 +71,7 @@ let Valid_order () =
                { ProductCode = "G123"
                  Quantity = "1" } |] }
 
-    // fix duplicated id's with maybe task yeild?
+    // fix duplicated id's with maybe task yield?
     let expected: ValidatedOrder =
         { OrderLines =
             [ { ProductCode = WidgetCode.WidgetCode "W1234" |> Widget

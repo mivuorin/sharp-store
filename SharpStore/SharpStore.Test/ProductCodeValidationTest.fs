@@ -1,6 +1,5 @@
 ﻿module SharpStore.Test.ProductCodeValidationTest
 
-
 open Xunit
 open FsUnit
 

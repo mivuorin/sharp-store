@@ -15,7 +15,23 @@ open Giraffe.EndpointRouting
 open SharpStore.Web.Domain
 open SharpStore.Web.Session
 
-let endpoints = [ GET [ route "/" Index.view ] ] @ OrderController.orderEndpoints
+// TODO Figure out how get url for route so that links wont break every time route is changed.
+let orderEndpoints =
+    [ GET [
+          route "/order" OrderLinesStep.get
+          route "/order/line" OrderLinesStep.getOrderLinesState
+          route "/order/contact" ContactStep.get
+          route "/order/review" ReviewStep.get
+          routef "/thanks/%O" SubmitStep.get
+      ]
+      POST [
+          route "/order" SubmitStep.post
+          route "/order/line" OrderLinesStep.post
+          route "/order/contact" ContactStep.post
+      ]
+      DELETE [ routef "/order/line/delete/%i" OrderLinesStep.delete ] ]
+
+let endpoints = [ GET [ route "/" Index.view ] ] @ orderEndpoints
 
 [<EntryPoint>]
 let main args =
@@ -45,12 +61,8 @@ let main args =
         .AddTransient<OrderLineValidator>(
             Func<IServiceProvider, OrderLineValidator>(fun (prov: IServiceProvider) -> Validation.orderLineValidator)
         )
-        .AddTransient<Order.CreateOrder>(
-            Func<IServiceProvider, Order.CreateOrder>(fun prov -> Order.create Service.orderId)
-        )
-        .AddTransient<OrderController.BeginOrderAction>(
-            Func<IServiceProvider, OrderController.BeginOrderAction>(fun prov ->
-                OrderController.initOrderView (prov.GetService<ISession>()) (prov.GetService<Order.CreateOrder>()))
+        .AddTransient<GenerateOrderId>(
+            Func<IServiceProvider, GenerateOrderId>(fun (prov: IServiceProvider) -> Service.generateOrderId)
         )
         .AddTransient<ISession, Session>()
         .AddHttpContextAccessor()
@@ -63,7 +75,6 @@ let main args =
             SystemTextJson.Serializer(JsonFSharpOptions.Default().ToJsonSerializerOptions())
         )
     |> ignore
-
 
     let app = builder.Build()
 

@@ -5,9 +5,9 @@ open System
 open SharpStore.Web.Domain
 open Validus
 
-let orderId: OrderId = Guid.NewGuid
+let generateOrderId: GenerateOrderId = Guid.NewGuid
 
-// todo write unit tests!
+// todo Obsolete, can be replaced with strongly typing orderlines to not empty collection
 let validateOrderLine (orderLineValidator: OrderLineValidator) (getProductId: GetProductId) : ValidateOrderLine =
     fun form ->
         task {
