@@ -82,12 +82,12 @@ let emptyToOption: Validator<String, string option> =
         function
         | "" -> None
         | value -> Some value
+
     Validator.create (constant "") (fun _ -> true) *|* (foo)
 
 let phoneValidator: Validator<string, string option> =
     emptyToOption
-    >=>
-    Check.optional (Check.WithMessage.String.betweenLen 1 16 (constant "Please enter valid phone number"))
+    >=> Check.optional (Check.WithMessage.String.betweenLen 1 16 (constant "Please enter valid phone number"))
 
 let contactValidator: ContactValidator =
     fun form ->

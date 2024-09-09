@@ -17,7 +17,7 @@ let reviewProducts (orderLines: OrderLine list) =
                 div [ _class "col" ] [ line.Quantity |> string |> str ]
             ])
 
-    div [] lines
+    div [ _id "order-lines" ] lines
 
 let reviewStep (orderLines: OrderLine list) (contact: Contact) =
     div [ _id "order-step" ] [
@@ -29,19 +29,21 @@ let reviewStep (orderLines: OrderLine list) (contact: Contact) =
 
         h4 [] [ str "Contact information" ]
         // todo helper text here.
-        div [ _class "row" ] [
-            label [ _class "col-sm-2 col-form-label" ] [ str "Name" ]
-            div [ _class "col-sm-10" ] [ span [ _class "form-control-plaintext" ] [ str contact.Name ] ]
-        ]
-        div [ _class "row" ] [
-            label [ _class "col-sm-2 col-form-label" ] [ str "Email" ]
-            div [ _class "col-sm-10" ] [ span [ _class "form-control-plaintext" ] [ str contact.Email ] ]
-        ]
-        div [ _class "row" ] [
-            label [ _class "col-sm-2 col-form-label" ] [ str "Phone" ]
-            div [ _class "col-sm-10" ] [
-                span [ _class "form-control-plaintext" ] [
-                    contact.Phone |> Option.defaultValue "No phone number" |> str
+        div [ _id "contact-information" ] [
+            div [ _class "row" ] [
+                label [ _class "col-sm-2 col-form-label" ] [ str "Name" ]
+                div [ _class "col-sm-10" ] [ span [ _class "form-control-plaintext" ] [ str contact.Name ] ]
+            ]
+            div [ _class "row" ] [
+                label [ _class "col-sm-2 col-form-label" ] [ str "Email" ]
+                div [ _class "col-sm-10" ] [ span [ _class "form-control-plaintext" ] [ str contact.Email ] ]
+            ]
+            div [ _class "row" ] [
+                label [ _class "col-sm-2 col-form-label" ] [ str "Phone" ]
+                div [ _class "col-sm-10" ] [
+                    span [ _class "form-control-plaintext" ] [
+                        contact.Phone |> Option.defaultValue "No phone number" |> str
+                    ]
                 ]
             ]
         ]
