@@ -55,7 +55,7 @@ let private navbar =
 
 // todo wrapping single xmlnode into list is a bit fishy composition
 let main (content: XmlNode list) : XmlNode =
-    html [] [
+    html [ _data "bs-theme" "dark" ] [
         head [] [
             meta [ _charset "utf-8" ]
             meta [
