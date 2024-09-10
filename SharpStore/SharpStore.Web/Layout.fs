@@ -40,9 +40,21 @@ let private navbar =
                 ul [ _class "navbar-nav me-auto mb-auto" ] [
                     li [ _class "nav-item" ] [
                         a [
-                            _class "nav-link active"
+                            _class "nav-link"
                             _href "/about"
                         ] [ str "About" ]
+                    ]
+                    li [ _class "nav-item" ] [
+                        a [
+                            _class "nav-link"
+                            _href "/catalog"
+                        ] [ str "Catalog" ]
+                    ]
+                    li [ _class "nav-item" ] [
+                        a [
+                            _class "nav-link"
+                            _href "/contact"
+                        ] [ str "Contact us" ]
                     ]
                 ]
                 a [
