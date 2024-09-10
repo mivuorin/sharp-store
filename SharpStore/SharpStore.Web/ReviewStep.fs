@@ -7,27 +7,46 @@ open Giraffe.ViewEngine.Htmx
 open SharpStore.Web.Domain
 open SharpStore.Web.Session
 
-let reviewProducts (orderLines: OrderLine list) =
-    let lines =
-        orderLines
-        |> List.map (fun line ->
-            div [ _class "row" ] [
-                div [ _class "col" ] [ line.ProductCode |> ProductCode.value |> str ]
-                // todo Proper formatting of quantity!
-                div [ _class "col" ] [ line.Quantity |> string |> str ]
-            ])
+let orderLinesTable (lines: OrderLine list) =
+    let row index orderLine =
+        tr [] [
+            th [ _scope "row" ] [ index + 1 |> string |> str ]
+            td [] [ orderLine.ProductCode |> ProductCode.value |> str ]
+            td [] [ orderLine.Quantity |> string |> str ]
+        ]
 
-    div [ _id "order-lines" ] lines
+    table [
+        _id "order-lines"
+        _class "table table-striped align-middle"
+    ] [
+        thead [] [
+            tr [] [
+                th [
+                    _scope "col"
+                    _class "col-1"
+                ] [ str "#" ]
+                th [
+                    _scope "col"
+                    _class "col-4"
+                ] [ str "Product" ]
+                th [
+                    _scope "col"
+                    _class "col"
+                ] [ str "Quantity" ]
+            ]
+        ]
+        tbody [ _class "table-group-divider" ] (lines |> List.mapi row)
+    ]
 
 let reviewStep (orderLines: OrderLine list) (contact: Contact) =
     div [ _id "order-step" ] [
         h1 [] [ str "Review your order" ]
         p [] [ str "Please check that all your order information is correct before submitting order." ]
 
-        h4 [] [ str "Products" ]
-        reviewProducts orderLines
+        h2 [] [ str "Products" ]
+        orderLinesTable orderLines
 
-        h4 [] [ str "Contact information" ]
+        h2 [] [ str "Contact information" ]
         // todo helper text here.
         div [ _id "contact-information" ] [
             div [ _class "row" ] [

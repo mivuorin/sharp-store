@@ -12,26 +12,56 @@ type OrderLineModel =
     { Form: OrderLineForm
       Errors: Map<string, string list> }
 
-let orderLine index (orderLine: OrderLine) =
-    div [ _class "row mb-3" ] [
-        div [ _class "col-5" ] [
-            span [ _class "form-control-plaintext" ] [ orderLine.ProductCode |> ProductCode.value |> str ]
-        ]
-        div [ _class "col-3" ] [
-            span [ _class "form-control-plaintext" ] [
-                // todo culture & formatting for decimals?
-                orderLine.Quantity |> string |> str
-            ]
-        ]
-        div [ _class "col" ] [
+let orderLineRow (index: int) (orderLine: OrderLine) =
+    tr [] [
+        th [ _scope "row" ] [ index + 1 |> string |> str ]
+        td [] [ orderLine.ProductCode |> ProductCode.value |> str ]
+        td [] [ orderLine.Quantity |> string |> str ]
+        td [] [
             input [
-                _class "btn btn-link"
+                _class "btn btn-link btn-xs"
                 _type "button"
                 _hxDelete $"/order/line/delete/{index}"
                 _hxSwap "none"
                 _value "Remove"
             ]
         ]
+    ]
+
+let orderLinesTable (lines: OrderLine list) =
+    let rows =
+        if lines = List.Empty then
+            [ tr [] [
+                  td [
+                      _class "text-center"
+                      _colspan "4"
+                  ] [ str "Your order is empty. Please add at least one item before continuing." ]
+              ] ]
+        else
+            lines |> List.mapi orderLineRow
+
+    table [ _class "table table-striped align-middle" ] [
+        thead [] [
+            tr [] [
+                th [
+                    _scope "col"
+                    _class "col-1"
+                ] [ str "#" ]
+                th [
+                    _scope "col"
+                    _class "col-4"
+                ] [ str "Product" ]
+                th [
+                    _scope "col"
+                    _class "col-5"
+                ] [ str "Quantity" ]
+                th [
+                    _scope "col"
+                    _class "col-2"
+                ] []
+            ]
+        ]
+        tbody [ _class "table-group-divider" ] rows
     ]
 
 let nextButton =
@@ -54,15 +84,13 @@ let nextButtonDisabled =
     ] [ str "Next" ]
 
 let orderLinesStepState (lines: OrderLine list) =
-    if List.length lines = 0 then
-        div [ _class "row" ] [
-            span [] [ str "Your order is empty!" ]
+    div [] [
+        orderLinesTable lines
+        if lines = List.Empty then
             nextButtonDisabled
-        ]
-    else
-        let content = lines |> List.mapi orderLine
-        div [] (nextButton :: content)
-
+        else
+            nextButton
+    ]
 
 let addOrderLineForm (model: OrderLineForm) errors =
     form [
@@ -76,14 +104,14 @@ let addOrderLineForm (model: OrderLineForm) errors =
                 |> Input.placeHolder "Product Code"
                 |> Input.view
             ]
-            div [ _class "col-3" ] [
+            div [ _class "col-5" ] [
                 Input.text "add-product-quantity" (nameof model.Quantity) model.Quantity errors
                 |> Input.placeHolder "Quantity"
                 |> Input.view
             ]
-            div [ _class "col" ] [
+            div [ _class "col-2" ] [
                 button [
-                    _class "btn btn-secondary"
+                    _class "btn btn-secondary btn-xs"
                     _type "submit"
                 ] [ str "Add Product" ]
             ]
@@ -140,8 +168,7 @@ let post: HttpHandler =
             | Ok orderLine ->
                 let lines = session.TryFind "OrderLines" |> Option.defaultValue List.Empty
 
-                let lines = orderLine :: lines
-                session.Add "OrderLines" lines
+                lines @ [ orderLine ] |> session.Add "OrderLines"
 
                 let content = addOrderLineForm OrderLineForm.init ValidationErrors.empty
                 return! (withHxTrigger "OrderLinesChanged" >=> htmlView content) next ctx

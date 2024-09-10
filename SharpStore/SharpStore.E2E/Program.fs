@@ -30,7 +30,7 @@ let submit_order_test () =
     once (fun () -> url (indexPageUrl + "/order"))
 
     "order has no order lines"
-    &&& fun _ -> "#order-lines > .row" == "Your order is empty!"
+    &&& fun _ -> read "#order-lines td" |> contains "Your order is empty."
 
     "next is disabled when there is no orders" &&& fun _ -> disabled "Next"
 
@@ -40,16 +40,16 @@ let submit_order_test () =
         "#add-product-quantity" << "2"
         click "Add Product"
 
-        "#order-lines > div > span" *= "G200"
-        "#order-lines > div > span" *= "2"
+        "#order-lines td:nth-child(2)" *= "G200"
+        "#order-lines td:nth-child(3)" *= "2"
 
         click "Remove"
 
-        "#order-lines > .row" == "Your order is empty!"
+        read "#order-lines td" |> contains "Your order is empty."
 
     // todo ideal way to split long stateful test into smaller one?
     "full order process"
-    &&& fun _ ->
+    &&&& fun _ ->
         "#add-product-code" << "W0005"
         "#add-product-quantity" << "12,5"
         click "Add Product"
@@ -70,11 +70,11 @@ let submit_order_test () =
 
         "h1" == "Review your order"
 
-        "#order-lines > .row > .col" *= "W0005"
-        "#order-lines > .row > .col" *= "12.5"
+        "#order-lines tr:nth-child(1) td:nth-child(2)" *= "W0005"
+        "#order-lines tr:nth-child(1) td:nth-child(3)" *= "12.5"
 
-        "#order-lines > .row > .col" *= "G500"
-        "#order-lines > .row > .col" *= "20"
+        "#order-lines tr:nth-child(2) td:nth-child(2)" *= "G500"
+        "#order-lines tr:nth-child(2) td:nth-child(3)" *= "20"
 
         "#contact-information span" *= "Canopy User"
         "#contact-information span" *= "canopy.user@test.com"
