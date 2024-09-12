@@ -159,7 +159,7 @@ let post: HttpHandler =
     fun next ctx ->
         task {
             let session = ctx.GetService<ISession>()
-            let validateOrderLine = ctx.GetService<ValidateOrderLine>()
+            let validateOrderLine = ctx.GetService<OrderLineValidator>()
 
             let! form = ctx.BindFormAsync<OrderLineForm>()
             let! validated = validateOrderLine form

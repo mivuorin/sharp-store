@@ -54,15 +54,12 @@ let main args =
             Func<IServiceProvider, GetProductId>(fun (prov: IServiceProvider) ->
                 prov.GetService<Database.Connection>() |> Database.getProductId)
         )
-        .AddTransient<ValidateOrderLine>(
-            Func<IServiceProvider, ValidateOrderLine>(fun (prov: IServiceProvider) ->
-                Service.validateOrderLine (prov.GetService<OrderLineValidator>()) (prov.GetService<GetProductId>()))
-        )
         .AddTransient<OrderLineValidator>(
-            Func<IServiceProvider, OrderLineValidator>(fun (prov: IServiceProvider) -> Validation.orderLineValidator)
+            Func<IServiceProvider, OrderLineValidator>(fun (prov: IServiceProvider) ->
+                Validation.orderLineValidator (prov.GetService<GetProductId>()))
         )
         .AddTransient<GenerateOrderId>(
-            Func<IServiceProvider, GenerateOrderId>(fun (prov: IServiceProvider) -> Service.generateOrderId)
+            Func<IServiceProvider, GenerateOrderId>(fun (prov: IServiceProvider) -> OrderIdGenerator.gen)
         )
         .AddTransient<ISession, Session>()
         .AddHttpContextAccessor()

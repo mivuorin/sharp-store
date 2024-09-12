@@ -80,7 +80,6 @@ let insertOrder (connection: Connection) : InsertOrder =
 
             let orderLines = order.OrderLines |> List.map (toOrderLine order.Id)
 
-            // todo Insert order lines crashes when there is no order lines.
             let insertOrderLines =
                 insert {
                     into orderLineTable

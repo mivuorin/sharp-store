@@ -8,6 +8,8 @@ open Validus.Operators
 
 open SharpStore.Web.Domain
 
+open TaskValidate
+
 let widgetCodeValidator: Validator<string, WidgetCode> =
     (Check.String.pattern "^([wW]+)(\d{4})$") *|* WidgetCode.WidgetCode
 
@@ -62,17 +64,6 @@ let phoneValidator: Validator<string, string option> =
     emptyToOption
     >=> Check.optional (Check.WithMessage.String.betweenLen 1 16 (constant "Please enter valid phone number"))
 
-let orderLineValidator: OrderLineValidator =
-    fun form ->
-        validate {
-            let! productCode = productCodeValidator (nameof form.ProductCode) form.ProductCode
-            and! quantity = quantityValidator (nameof form.Quantity) form.Quantity
-
-            return
-                { ProductCode = productCode
-                  Quantity = quantity }
-        }
-
 let contactValidator: ContactValidator =
     fun form ->
         validate {
@@ -84,4 +75,29 @@ let contactValidator: ContactValidator =
                 { Name = name
                   Email = email
                   Phone = phone }
+        }
+
+let productCodeExistsValidator (getProductId: GetProductId) : TaskValidator<ProductCode, Guid> =
+    fun field value ->
+        task {
+            let! productId = getProductId value
+
+            match productId with
+            | None ->
+                let errors = ValidationErrors.create field [ "Product does not exist." ]
+                return ValidationResult.Error errors
+            | Some productId -> return ValidationResult.Ok productId
+        }
+
+let orderLineValidator (getProductId: GetProductId) : OrderLineValidator =
+    fun form ->
+        taskValidate {
+            let! productCode = productCodeValidator (nameof form.ProductCode) form.ProductCode |> asTask
+            let! productId = productCodeExistsValidator getProductId (nameof form.ProductCode) productCode
+            let! quantity = quantityValidator (nameof form.Quantity) form.Quantity |> asTask
+
+            return
+                { ProductId = productId
+                  ProductCode = productCode
+                  Quantity = quantity }
         }

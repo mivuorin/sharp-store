@@ -25,11 +25,6 @@ type ProductCode =
     | Widget of WidgetCode
     | Gadget of GadgetCode
 
-// todo ValidatedOrderLine is currently middle type only used in validation.
-type ValidatedOrderLine =
-    { ProductCode: ProductCode
-      Quantity: decimal }
-
 type Contact =
     { Name: string
       Email: string
@@ -48,15 +43,12 @@ type Order =
 
 type OrderCreated = { Id: Guid }
 
-type OrderLineValidator = OrderLineForm -> ValidationResult<ValidatedOrderLine>
+type OrderLineValidator = OrderLineForm -> Task<ValidationResult<OrderLine>>
+
 type ContactValidator = ContactForm -> ValidationResult<Contact>
 
 // todo Have own type for order id instead of guid.
 type GenerateOrderId = unit -> Guid
-
-// Services
-type ValidateOrderLine = OrderLineForm -> Task<ValidationResult<OrderLine>>
-// todo there's requirement for type like submitOrder: -> OrderLine list -> Contact -> Shipping -> OrderCreated
 
 // Database
 type InsertOrder = Order -> Task
@@ -73,6 +65,8 @@ module ProductCode =
         match code with
         | Widget widgetCode -> WidgetCode.value widgetCode
         | Gadget gadgetCode -> GadgetCode.value gadgetCode
+
+// todo create ProductCode from string
 
 module Order =
     let create orderId lines contact : Order =

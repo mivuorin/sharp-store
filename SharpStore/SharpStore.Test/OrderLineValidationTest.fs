@@ -1,56 +1,72 @@
 module SharpStore.Test.OrderLineValidationTest
 
 open System
+open SharpStore.Web
 open Xunit
 open FsUnit
-
-open System.Threading.Tasks
 
 open SharpStore.Web.Domain
 open SharpStore.Web.Validation
 
-let expectedId = Guid.NewGuid()
-let getProductId: GetProductId = fun _ -> Task.FromResult(Some expectedId)
+let gadgetId = Guid.NewGuid()
+let widgetId = Guid.NewGuid()
+
+let getProductId: GetProductId =
+    fun code ->
+        task {
+            match code with
+            | ProductCode.Gadget(GadgetCode "G001") -> return Some gadgetId
+            | ProductCode.Widget(WidgetCode "W1000") -> return Some widgetId
+            | _ -> return None
+        }
 
 [<Fact>]
-let Order_line_gadget () =
+let Valid_gadget () =
     let form: OrderLineForm =
-        { ProductCode = "G123"
+        { ProductCode = "G001"
           Quantity = "1" }
 
-    let expected: ValidatedOrderLine =
-        { ProductCode = GadgetCode.GadgetCode "G123" |> Gadget
+    let expected: OrderLine =
+        { ProductId = gadgetId
+          ProductCode = GadgetCode.GadgetCode "G001" |> Gadget
           Quantity = 1m }
 
-    let result = orderLineValidator form
+    task {
+        let! result = orderLineValidator getProductId form
 
-    match result with
-    | Ok orderLine -> orderLine |> should equal expected
-    | Error _ -> Assert.Fail("Expected Ok result")
-
-
-[<Fact>]
-let Order_line_invalid_gadget () =
-    let form: OrderLineForm =
-        { ProductCode = "G0001"
-          Quantity = "1" }
-    // todo this test duplicates product code validation which is not really necessary
-    let result = orderLineValidator form
-    result |> Result.isError |> should equal true
-
+        result |> Result.toValue |> should equal expected
+    }
 
 [<Fact>]
-let Order_line_widget () =
+let Valid_widget () =
     let form: OrderLineForm =
-        { ProductCode = "W1234"
+        { ProductCode = "W1000"
+          Quantity = "1,5" }
+
+    let expected: OrderLine =
+        { ProductId = widgetId
+          ProductCode = WidgetCode.WidgetCode "W1000" |> Widget
+          Quantity = 1.5m }
+
+    task {
+        let! result = orderLineValidator getProductId form
+
+        result |> Result.toValue |> should equal expected
+    }
+
+[<Fact>]
+let Product_code_not_found () =
+    let form: OrderLineForm =
+        { ProductCode = "W2000"
           Quantity = "1" }
 
-    let expected: ValidatedOrderLine =
-        { ProductCode = WidgetCode.WidgetCode "W1234" |> Widget
-          Quantity = 1m }
+    let notFound: GetProductId = fun _ -> task { return Option.None }
 
-    let result = orderLineValidator form
+    task {
+        let! result = orderLineValidator notFound form
 
-    match result with
-    | Ok orderLine -> orderLine |> should equal expected
-    | Error _ -> Assert.Fail("Expected OK result")
+        result
+        |> Result.toError
+        |> ValidationErrors.errorsFor "ProductCode"
+        |> should equal [ "Product does not exist." ]
+    }

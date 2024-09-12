@@ -17,10 +17,10 @@ let connectionFactory = Database.connection connectionString
 
 [<Fact>]
 let Insert_order () =
-    let expectedId = Service.generateOrderId ()
+    let expectedId = OrderIdGenerator.gen ()
+    let getProductId = Database.getProductId connectionFactory
 
-    let validateOrderLine =
-        Service.validateOrderLine Validation.orderLineValidator (Database.getProductId connectionFactory)
+    let validateOrderLine = Validation.orderLineValidator getProductId
 
     task {
         use connection = connectionFactory ()

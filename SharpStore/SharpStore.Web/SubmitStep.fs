@@ -26,7 +26,7 @@ let post: HttpHandler =
         task {
             // todo refactor to submit function
             let session = ctx.GetService<ISession>()
-            let generateOrderId = ctx.GetService<GenerateOrderId>() // todo hardcoded dependency
+            let generateOrderId = ctx.GetService<GenerateOrderId>()
             let insertOrder = ctx.GetService<InsertOrder>()
 
             let lines = session.Find<OrderLine list> "OrderLines"
