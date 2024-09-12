@@ -38,6 +38,7 @@ let submit_order_test () =
     &&& fun _ ->
         "#add-product-code" << "G200"
         "#add-product-quantity" << "2"
+        
         click "Add Product"
 
         "#order-lines td:nth-child(2)" *= "G200"
@@ -49,13 +50,15 @@ let submit_order_test () =
 
     // todo ideal way to split long stateful test into smaller one?
     "full order process"
-    &&&& fun _ ->
+    &&& fun _ ->
         "#add-product-code" << "W0005"
         "#add-product-quantity" << "12,5"
+
         click "Add Product"
 
         "#add-product-code" << "G500"
         "#add-product-quantity" << "20"
+
         click "Add Product"
 
         click "Next"

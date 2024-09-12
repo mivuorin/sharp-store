@@ -11,11 +11,6 @@ type OrderLineForm =
     { ProductCode: string
       Quantity: string }
 
-// Giraffe bindFormAsync<T> function has bug which leaves list uninitialized (null) when
-// there is no form values to bind. To avoid this use array instead of list.
-[<CLIMutable>]
-type OrderForm = { OrderLines: OrderLineForm array }
-
 [<CLIMutable>]
 type ContactForm =
     { Name: string
@@ -23,6 +18,7 @@ type ContactForm =
       Phone: string }
 
 type WidgetCode = WidgetCode of string
+
 type GadgetCode = GadgetCode of string
 
 type ProductCode =
@@ -39,16 +35,10 @@ type Contact =
       Email: string
       Phone: string option }
 
-// todo redesign ValidatedOrder.
-type ValidatedOrder = { OrderLines: ValidatedOrderLine list }
-
 type OrderLine =
     { ProductId: Guid
       ProductCode: ProductCode
       Quantity: decimal }
-
-// todo ValidatedContact instead of reusing ContactForm!
-// todo there's requirement for type like submitOrder: -> OrderLine list -> Contact -> Shipping -> OrderCreated
 
 type Order =
     { Id: Guid
@@ -58,9 +48,7 @@ type Order =
 
 type OrderCreated = { Id: Guid }
 
-// Replace OrderLineValidator with Validius.Validator type?
 type OrderLineValidator = OrderLineForm -> ValidationResult<ValidatedOrderLine>
-type OrderValidator = OrderForm -> ValidationResult<ValidatedOrder>
 type ContactValidator = ContactForm -> ValidationResult<Contact>
 
 // todo Have own type for order id instead of guid.
@@ -68,6 +56,7 @@ type GenerateOrderId = unit -> Guid
 
 // Services
 type ValidateOrderLine = OrderLineForm -> Task<ValidationResult<OrderLine>>
+// todo there's requirement for type like submitOrder: -> OrderLine list -> Contact -> Shipping -> OrderCreated
 
 // Database
 type InsertOrder = Order -> Task

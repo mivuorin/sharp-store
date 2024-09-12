@@ -1,4 +1,4 @@
-module SharpStore.Test.OrderFormValidationTest
+module SharpStore.Test.OrderLineValidationTest
 
 open System
 open Xunit
@@ -54,33 +54,3 @@ let Order_line_widget () =
     match result with
     | Ok orderLine -> orderLine |> should equal expected
     | Error _ -> Assert.Fail("Expected OK result")
-
-[<Fact>]
-let One_order_line_is_required () =
-    let form: OrderForm = { OrderLines = Array.empty }
-
-    let result = orderValidator form
-    result |> Result.isError |> should equal true
-
-[<Fact>]
-let Valid_order () =
-    let form: OrderForm =
-        { OrderLines =
-            [| { ProductCode = "W1234"
-                 Quantity = "1" }
-               { ProductCode = "G123"
-                 Quantity = "1" } |] }
-
-    // fix duplicated id's with maybe task yield?
-    let expected: ValidatedOrder =
-        { OrderLines =
-            [ { ProductCode = WidgetCode.WidgetCode "W1234" |> Widget
-                Quantity = 1m }
-              { ProductCode = GadgetCode.GadgetCode "G123" |> Gadget
-                Quantity = 1m } ] }
-
-    let result = orderValidator form
-
-    match result with
-    | Ok actual -> actual |> should equal expected
-    | Error _ -> Assert.Fail("Expected Ok result")

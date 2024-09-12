@@ -14,7 +14,7 @@
         <Compile Include="HttpHandlerTest.fs" />
         <Compile Include="ProductCodeValidationTest.fs" />
         <Compile Include="QuantityValidationTest.fs" />
-        <Compile Include="OrderFormValidationTest.fs" />
+        <Compile Include="OrderLineValidationTest.fs" />
         <Compile Include="SessionStub.fs" />
         <Compile Include="ContactValidationTest.fs" />
         <Compile Include="Program.fs"/>

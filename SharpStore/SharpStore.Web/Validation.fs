@@ -17,7 +17,7 @@ let gadgetCodeValidator: Validator<string, GadgetCode> =
 let productCodeValidator: Validator<string, ProductCode> =
     (widgetCodeValidator *|* Widget <|> gadgetCodeValidator *|* Gadget)
 
-let stringDecimalValidator: Validator<string, string> =
+let private stringDecimalValidator: Validator<string, string> =
     let msg = sprintf "Please provide a valid %s"
 
     let rule (value: string) =
@@ -36,33 +36,6 @@ let quantityValidator: Validator<string, decimal> =
         .And(Check.Decimal.lessThan 50m)
         .Build()
 
-let orderLineValidator: OrderLineValidator =
-    fun form ->
-        validate {
-            let! productCode = productCodeValidator (nameof form.ProductCode) form.ProductCode
-            and! quantity = quantityValidator (nameof form.Quantity) form.Quantity
-
-            return
-                { ProductCode = productCode
-                  Quantity = quantity }
-        }
-
-let orderValidator: OrderValidator =
-    fun form ->
-        let orderLineCountValidator = ValidatorGroup(Check.Array.notEmpty).Build()
-
-        validate {
-            let! _ = orderLineCountValidator "OrderLines" form.OrderLines
-
-            and! orderLines =
-                form.OrderLines
-                |> Array.map orderLineValidator
-                |> Array.toList
-                |> ValidationResult.sequence
-
-            return { OrderLines = orderLines }
-        }
-
 let private constant message : ValidationMessage = fun _ -> message
 
 let nameValidator: Validator<string, string> =
@@ -77,7 +50,7 @@ let emailValidator: Validator<string, string> =
     Validator.create (constant "Please enter valid email") rule
 
 // todo Validator composition hack just for converting types to Option
-let emptyToOption: Validator<String, string option> =
+let private emptyToOption: Validator<String, string option> =
     let foo =
         function
         | "" -> None
@@ -88,6 +61,17 @@ let emptyToOption: Validator<String, string option> =
 let phoneValidator: Validator<string, string option> =
     emptyToOption
     >=> Check.optional (Check.WithMessage.String.betweenLen 1 16 (constant "Please enter valid phone number"))
+
+let orderLineValidator: OrderLineValidator =
+    fun form ->
+        validate {
+            let! productCode = productCodeValidator (nameof form.ProductCode) form.ProductCode
+            and! quantity = quantityValidator (nameof form.Quantity) form.Quantity
+
+            return
+                { ProductCode = productCode
+                  Quantity = quantity }
+        }
 
 let contactValidator: ContactValidator =
     fun form ->

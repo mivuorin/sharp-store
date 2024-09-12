@@ -7,7 +7,6 @@ open Validus
 
 let generateOrderId: GenerateOrderId = Guid.NewGuid
 
-// todo Obsolete, can be replaced with strongly typing orderlines to not empty collection
 let validateOrderLine (orderLineValidator: OrderLineValidator) (getProductId: GetProductId) : ValidateOrderLine =
     fun form ->
         task {
