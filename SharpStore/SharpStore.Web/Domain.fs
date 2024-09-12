@@ -81,12 +81,12 @@ module Order =
           Contact = contact }
 
 module OrderLineForm =
-    let init: OrderLineForm =
+    let empty: OrderLineForm =
         { ProductCode = ""
           Quantity = "" }
 
 module ContactForm =
-    let init: ContactForm =
+    let empty: ContactForm =
         { Name = ""
           Email = ""
           Phone = "" }

@@ -141,9 +141,9 @@ let get: HttpHandler =
         // Navigating back from previous step is htmx request
         let content =
             if ctx.Request.IsHtmx then
-                orderLinesStep OrderLineForm.init ValidationErrors.empty
+                orderLinesStep OrderLineForm.empty ValidationErrors.empty
             else
-                [ orderLinesStep OrderLineForm.init ValidationErrors.empty ] |> Layout.main
+                [ orderLinesStep OrderLineForm.empty ValidationErrors.empty ] |> Layout.main
 
         htmlView content next ctx
 
@@ -170,7 +170,7 @@ let post: HttpHandler =
 
                 lines @ [ orderLine ] |> session.Add "OrderLines"
 
-                let content = addOrderLineForm OrderLineForm.init ValidationErrors.empty
+                let content = addOrderLineForm OrderLineForm.empty ValidationErrors.empty
                 return! (withHxTrigger "OrderLinesChanged" >=> htmlView content) next ctx
 
             | Error errors ->

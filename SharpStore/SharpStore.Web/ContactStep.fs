@@ -57,7 +57,7 @@ let get: HttpHandler =
         let contact = session.TryFind "Contact"
 
         let form =
-            contact |> Option.map ContactForm.from |> Option.defaultValue ContactForm.init
+            contact |> Option.map ContactForm.from |> Option.defaultValue ContactForm.empty
 
         htmlView (contactStep form ValidationErrors.empty) next ctx
 

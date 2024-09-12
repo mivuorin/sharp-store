@@ -38,7 +38,7 @@ let submit_order_test () =
     &&& fun _ ->
         "#add-product-code" << "G200"
         "#add-product-quantity" << "2"
-        
+
         click "Add Product"
 
         "#order-lines td:nth-child(2)" *= "G200"
