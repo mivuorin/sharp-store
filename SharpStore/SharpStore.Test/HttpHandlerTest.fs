@@ -14,7 +14,7 @@ let Index_view_handler_example_test () =
     context.Response.Body <- new MemoryStream()
 
     task {
-        let! result = Index.view Giraffe.Core.earlyReturn context
+        let! result = Index.get Giraffe.Core.earlyReturn context
         result |> Option.isSome |> should equal true
 
         let result = result.Value

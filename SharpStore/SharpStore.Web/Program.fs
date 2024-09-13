@@ -31,7 +31,7 @@ let orderEndpoints =
       ]
       DELETE [ routef "/order/line/delete/%i" OrderLinesStep.delete ] ]
 
-let endpoints = [ GET [ route "/" Index.view ] ] @ orderEndpoints
+let endpoints = [ GET [ route "/" Index.get ] ] @ orderEndpoints
 
 [<EntryPoint>]
 let main args =

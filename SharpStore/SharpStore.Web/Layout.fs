@@ -7,7 +7,7 @@ let _data_bs_toggle = attr "data-bs-toggle"
 let _data_bs_target = attr "data-bs-target"
 
 let private navbar =
-    nav [ _class "navbar navbar-expand-sm" ] [
+    nav [ _class "navbar navbar-expand-sm mb-4" ] [
         // todo fix other links alignment onto 2nd line
         div [ _class "container-fluid align-items-end" ] [
             a [

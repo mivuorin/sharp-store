@@ -12,9 +12,9 @@ let index_test () =
 
     before (fun () -> url indexPageUrl)
 
-    "hello canopy test"
+    "index page shows header"
     &&& fun _ ->
-        "h1" == "Welcome to Giraffe"
+        "h1" == "Welcome to Our Widget and Gadget Store"
 
         waitFor (fun () -> title () = "SharpStore")
 
