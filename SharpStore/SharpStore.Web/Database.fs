@@ -107,3 +107,24 @@ let getProductId (connection: Connection) : GetProductId =
 
             return Seq.tryHead products |> Option.map _.Id
         }
+
+let toProduct (from:Product): Domain.Product =
+    {
+        Id = from.Id
+        ProductCode = from.ProductCode // todo map to product code!
+    }
+
+let getProducts (connection: Connection) : GetProducts =
+    fun () ->
+        task {
+            use connection = connection ()
+
+            let! products =
+                select {
+                    for p in productTable do
+                    selectAll
+                }
+                |> connection.SelectAsync<Product>
+
+            return products |> Seq.map toProduct |> Seq.toList
+        }

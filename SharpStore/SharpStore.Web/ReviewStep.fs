@@ -8,7 +8,7 @@ open SharpStore.Web.Domain
 open SharpStore.Web.Session
 
 let orderLinesTable (lines: OrderLine list) =
-    let row index orderLine =
+    let row index (orderLine: OrderLine) =
         tr [] [
             th [ _scope "row" ] [ index + 1 |> string |> str ]
             td [] [ orderLine.ProductCode |> ProductCode.value |> str ]

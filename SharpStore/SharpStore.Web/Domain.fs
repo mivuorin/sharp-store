@@ -41,6 +41,12 @@ type Order =
       OrderLines: OrderLine list
       Contact: Contact }
 
+type Product =
+    {
+        Id: Guid
+        ProductCode: string // todo this should be product code!
+    }
+
 type OrderCreated = { Id: Guid }
 
 type OrderLineValidator = OrderLineForm -> Task<ValidationResult<OrderLine>>
@@ -53,6 +59,7 @@ type GenerateOrderId = unit -> Guid
 // Database
 type InsertOrder = Order -> Task
 type GetProductId = ProductCode -> Task<Guid option>
+type GetProducts = Unit -> Task<Product list>
 
 module WidgetCode =
     let value (WidgetCode code) = code

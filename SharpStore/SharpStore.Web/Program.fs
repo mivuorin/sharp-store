@@ -31,7 +31,10 @@ let orderEndpoints =
       ]
       DELETE [ routef "/order/line/delete/%i" OrderLinesStep.delete ] ]
 
-let endpoints = [ GET [ route "/" Index.get ] ] @ orderEndpoints
+let productReel =
+    [ GET [ route "/product-reel" ProductReel.get ] ]
+
+let endpoints = [ GET [ route "/" Index.get ] ] @ productReel @ orderEndpoints
 
 [<EntryPoint>]
 let main args =
@@ -53,6 +56,10 @@ let main args =
         .AddTransient<GetProductId>(
             Func<IServiceProvider, GetProductId>(fun (prov: IServiceProvider) ->
                 prov.GetService<Database.Connection>() |> Database.getProductId)
+        )
+        .AddTransient<GetProducts>(
+            Func<IServiceProvider, GetProducts>(fun (prov: IServiceProvider) ->
+                prov.GetService<Database.Connection>() |> Database.getProducts)
         )
         .AddTransient<OrderLineValidator>(
             Func<IServiceProvider, OrderLineValidator>(fun (prov: IServiceProvider) ->
